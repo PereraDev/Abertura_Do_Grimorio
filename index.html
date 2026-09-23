@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Abertura do Grimório</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="canvas-container"></div>
+
+    <div id="resultado-moeda" hidden>
+      <div class="resultado-moeda-conteudo">
+        <span id="resultado-moeda-texto"></span>
+      </div>
+    </div>
+
+    <div id="hud">
+      <span id="status">configure a partida e aperte Jogar</span>
+      <div id="hud-banner">
+        <div class="jogador jogador-brancas" id="relogio-w">
+          <div class="jogador-retrato"></div>
+          <div class="jogador-cristal"></div>
+          <div class="jogador-nome" id="nome-w">Você</div>
+          <div class="jogador-pontuacao" id="pontos-w">1000</div>
+        </div>
+        <div class="jogador jogador-pretas" id="relogio-b">
+          <div class="jogador-nome" id="nome-b">IA</div>
+          <div class="jogador-pontuacao" id="pontos-b">1000</div>
+          <div class="jogador-cristal"></div>
+          <div class="jogador-retrato"></div>
+        </div>
+        <div id="relogio-central">15:00</div>
+        <div id="aviso-vez"></div>
+        <div id="hud-acoes">
+          <button
+            id="botao-voz"
+            class="icone-btn"
+            title="Falar lance, ex: 'grifo para f3'"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"
+              ></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" y1="19" x2="12" y2="23"></line>
+              <line x1="8" y1="23" x2="16" y2="23"></line>
+            </svg>
+          </button>
+          <button
+            id="botao-ajuda"
+            class="icone-btn"
+            title="Como jogar / Regras"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </button>
+          <button id="botao-config" class="icone-btn" title="Configurações">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="3"></circle>
+              <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+              ></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div id="placar"></div>
+      <p id="status-voz"></p>
+    </div>
+
+    <div id="log-painel">
+      <button
+        id="log-toggle"
+        class="icone-btn"
+        title="Mostrar/ocultar registro"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <line x1="8" y1="6" x2="21" y2="6"></line>
+          <line x1="8" y1="12" x2="21" y2="12"></line>
+          <line x1="8" y1="18" x2="21" y2="18"></line>
+          <line x1="3" y1="6" x2="3.01" y2="6"></line>
+          <line x1="3" y1="12" x2="3.01" y2="12"></line>
+          <line x1="3" y1="18" x2="3.01" y2="18"></line>
+        </svg>
+      </button>
+      <div id="log-moldura">
+        <div id="log-titulo">Registro de Lances</div>
+        <div id="log"></div>
+      </div>
+    </div>
+
+    <div id="hub-inicial" class="modal-overlay">
+      <div class="grimorio">
+        <img
+          class="mascote mascote-coruja"
+          src="/assets/hub/coruja.webp"
+          alt=""
+          aria-hidden="true"
+        />
+        <img
+          class="mascote mascote-dragao"
+          src="/assets/hub/dragao.webp"
+          alt=""
+          aria-hidden="true"
+        />
+        <div class="lombada" aria-hidden="true"></div>
+        <h1 class="hub-titulo">Abertura do Grimório</h1>
+
+        <div class="fita-perfil" aria-label="Perfil do jogador">
+          <div class="stat">Nível<b id="perfil-nivel">1</b></div>
+          <div class="stat">Vitórias<b id="perfil-vitorias">0</b></div>
+          <div class="stat">Derrotas<b id="perfil-derrotas">0</b></div>
+          <div class="stat">Elo<b id="perfil-elo">1000</b></div>
+        </div>
+
+        <section class="pagina pagina-esquerda" aria-label="Configurar partida">
+          <p class="fita-titulo"><span>Configurar Partida</span></p>
+          <p class="hub-subtitulo">
+            Configure a partida e aperte o selo pra jogar.
+          </p>
+
+          <div class="campo-config toggle-campo">
+            <span class="campo-rotulo">Modo de jogo</span>
+            <div class="toggle-grupo" id="hub-modo-jogo" data-valor="ia">
+              <button type="button" class="toggle-btn ativo" data-valor="ia">
+                Contra a IA
+              </button>
+              <button type="button" class="toggle-btn" data-valor="local">
+                Multijogador Local
+              </button>
+            </div>
+          </div>
+
+          <div class="campo-config toggle-campo" id="hub-campo-dificuldade">
+            <span class="campo-rotulo">Dificuldade</span>
+            <div
+              class="toggle-grupo"
+              id="hub-dificuldade"
+              data-valor="intermediario"
+            >
+              <button type="button" class="toggle-btn" data-valor="iniciante">
+                Aprendiz
+              </button>
+              <button
+                type="button"
+                class="toggle-btn ativo"
+                data-valor="intermediario"
+              >
+                Intermediário
+              </button>
+              <button
+                type="button"
+                class="toggle-btn"
+                data-valor="bruxo-mestre"
+              >
+                Mestre
+              </button>
+            </div>
+          </div>
+
+          <div class="campo-config toggle-campo">
+            <span class="campo-rotulo">Cor das peças</span>
+            <div class="toggle-grupo" id="hub-cor" data-valor="random">
+              <button type="button" class="toggle-btn" data-valor="w">
+                ♙ Brancas
+              </button>
+              <button
+                type="button"
+                class="toggle-btn ativo"
+                data-valor="random"
+              >
+                ❓ Aleatório
+              </button>
+              <button type="button" class="toggle-btn" data-valor="b">
+                ♟ Pretas
+              </button>
+            </div>
+          </div>
+
+          <div class="hub-linha-dupla">
+            <label class="campo-config">
+              <span class="campo-rotulo">Tempo de partida</span>
+              <select id="hub-tempo-partida">
+                <option value="fide">Clássico FIDE (90+30)</option>
+                <option value="rapido" selected>Rápido (15+10)</option>
+                <option value="blitz">Blitz (3+2)</option>
+              </select>
+            </label>
+
+            <label class="campo-config">
+              <span class="campo-rotulo">Visual do tabuleiro</span>
+              <select id="hub-visual-tabuleiro">
+                <option value="runica" selected>Pedra Rúnica</option>
+                <option value="marmore">Mármore Clássico</option>
+                <option value="obsidiana">Obsidiana Sombria</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <section
+          class="pagina pagina-direita"
+          aria-label="Índice de líderes e perfil"
+        >
+          <p class="fita-titulo"><span>Índice de Líderes</span></p>
+          <div id="hub-placar-topo"></div>
+
+          <p class="page-kicker-hub" style="margin-top: 14px">
+            Últimas Partidas
+          </p>
+          <ol id="hub-placar-recentes" class="indice-recentes"></ol>
+          <button
+            type="button"
+            id="hub-placar-limpar"
+            class="hub-limpar-link"
+            hidden
+          >
+            Limpar registo
+          </button>
+
+          <button id="hub-jogar" class="selo-iniciar" disabled>
+            Carregando…
+          </button>
+        </section>
+      </div>
+
+      <div class="grimorio-bloqueio" aria-hidden="true">
+        <div class="capa-fechada">⚡</div>
+        <p class="mensagem-girar">
+          Gire o seu artefato para destrancar o Grimório
+        </p>
+      </div>
+    </div>
+
+    <div id="modal-config" class="modal-overlay" hidden>
+      <div class="modal-conteudo">
+        <button id="fechar-config" class="modal-fechar" title="Fechar">
+          ✕
+        </button>
+        <h2>⚙️ Configurações</h2>
+        <label class="campo-config">
+          Modo de jogo
+          <select id="modo-jogo">
+            <option value="ia" selected>Contra a IA</option>
+            <option value="local">Dois jogadores (mesmo dispositivo)</option>
+          </select>
+        </label>
+        <label class="campo-config" id="campo-dificuldade">
+          Dificuldade
+          <select id="dificuldade">
+            <option value="iniciante">Iniciante</option>
+            <option value="intermediario" selected>Intermediário</option>
+            <option value="bruxo-mestre">Bruxo Mestre</option>
+          </select>
+        </label>
+        <label class="campo-config">
+          Tempo de partida
+          <select id="tempo-partida">
+            <option value="fide">Clássico FIDE (90 min + 30s/lance)</option>
+            <option value="rapido" selected>Rápido (15 min + 10s/lance)</option>
+            <option value="blitz">Blitz (3 min + 2s/lance)</option>
+          </select>
+        </label>
+        <label class="campo-config">
+          Este é o seu conjunto?
+          <select id="pecas-proprias">
+            <option value="sim" selected>Sim, é meu</option>
+            <option value="nao">Não, peguei emprestado</option>
+          </select>
+        </label>
+        <div class="campo-config">
+          Cara ou coroa: chame um lado — quem acertar começa com as brancas
+          <div class="campo-sorteio">
+            <button id="chamar-cara" type="button">☀️ Cara</button>
+            <button id="chamar-coroa" type="button">🌙 Coroa</button>
+          </div>
+        </div>
+        <button id="reiniciar">Reiniciar partida</button>
+      </div>
+    </div>
+
+    <div id="modal-ajuda" class="modal-overlay" hidden>
+      <div class="modal-conteudo">
+        <button id="fechar-ajuda" class="modal-fechar" title="Fechar">✕</button>
+        <h2>⚡ Como Jogar</h2>
+        <p>
+          Jogue contra a IA ou com outra pessoa no mesmo dispositivo (escolha em
+          Configurações). Use o "Cara ou coroa" pra sortear quem fica com as
+          brancas. Objetivo: dar <strong>Ritual Quebrado</strong> no Coração
+          adversário — deixá-lo sob ataque sem nenhuma jogada que o livre.
+        </p>
+        <p>
+          Cada familiar do grimório tem seu nome:
+          <strong>Acólito</strong> (peão), <strong>Grifo</strong> (cavalo),
+          <strong>Oráculo</strong> (bispo), <strong>Gárgula</strong> (torre),
+          <strong>Arquimaga</strong> (rainha) e <strong>Coração</strong> (rei).
+        </p>
+
+        <h3>Controles</h3>
+        <ul>
+          <li>
+            <strong>Clique numa peça de quem tem a vez</strong> pra selecioná-la
+            — as casas onde ela pode ir se preenchem de cor (verde = lance
+            normal, vermelho = captura).
+          </li>
+          <li><strong>Clique numa casa colorida</strong> pra mover.</li>
+          <li>
+            <strong>Clique na peça de novo</strong> (ou noutra sua) pra trocar a
+            seleção.
+          </li>
+          <li>
+            Arraste (mouse ou dedo) pra girar a câmera; role a rodinha ou
+            belisque a tela com dois dedos pra aproximar/afastar.
+          </li>
+          <li>
+            <strong>Dificuldade</strong> ajusta o quão bem a IA (Stockfish)
+            joga. <strong>Reiniciar partida</strong> começa do zero.
+          </li>
+          <li>
+            <strong>Cronômetro:</strong> cada lado tem seu próprio relógio, que
+            só corre na sua vez (o do jogador ativo fica em destaque) e ganha um
+            incremento a cada lance. Escolha o controle de tempo (Clássico FIDE,
+            Rápido ou Blitz) em Configurações — quem zerar o relógio perde a
+            partida na hora, mesmo em posição vencedora.
+          </li>
+        </ul>
+
+        <h3>Como cada peça se move</h3>
+        <div id="grade-diagramas" class="diagramas-grid"></div>
+
+        <h3>Regras especiais</h3>
+        <ul>
+          <li>
+            <strong>Roque:</strong> Coração e Gárgula se movem juntos num só
+            lance (o Coração anda 2 casas na direção da Gárgula, ela salta pro
+            outro lado) — só vale se nenhum dos dois já se moveu, não há peças
+            no caminho e o Coração não passa por casas atacadas.
+          </li>
+          <li>
+            <strong>En passant:</strong> se um Acólito inimigo andar 2 casas de
+            uma vez e passar ao lado do seu Acólito, você pode capturá-lo como
+            se ele tivesse andado só 1 — mas só no lance imediatamente seguinte.
+          </li>
+          <li>
+            <strong>Promoção:</strong> o Acólito que chega na última fileira
+            vira outro familiar (aqui, sempre uma Arquimaga).
+          </li>
+          <li>
+            <strong>Selo Ameaçado:</strong> o Coração está sob ataque — o
+            próximo lance é obrigado a tirá-lo dessa condição.
+          </li>
+          <li>
+            <strong>Ritual Quebrado:</strong> Selo Ameaçado sem nenhuma saída —
+            a partida acaba.
+          </li>
+          <li>
+            <strong>Empate:</strong> acontece por afogamento (sem lances legais
+            e sem Selo Ameaçado), repetição de posição, material insuficiente
+            pra dar Ritual Quebrado, ou 50 lances sem captura/movimento de
+            Acólito.
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+          "chess.js": "https://unpkg.com/chess.js@1.0.0-beta.8/dist/esm/chess.js"
+        }
+      }
+    </script>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

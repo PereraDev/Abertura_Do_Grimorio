@@ -1,0 +1,1372 @@
+/* fonte local, sem glifos acentuados — só usada no título do hub */
+@font-face {
+  font-family: "Wild Breath";
+  src: url("/assets/fonts/TheWildBreathOfZelda.ttf") format("truetype");
+  font-display: swap;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: #0b0b12;
+  overflow: hidden;
+  font-family: "EB Garamond", Georgia, serif;
+  color: #e8e0c8;
+}
+.fonte-titulo {
+  font-family: "Cinzel", "Georgia", serif;
+  letter-spacing: 0.4px;
+}
+#canvas-container {
+  position: absolute;
+  inset: 0;
+}
+#canvas-container::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0) 50%,
+    rgba(4, 3, 10, 0.65) 100%
+  );
+}
+
+/* ---- resultado do cara ou coroa, banner central temporário ---- */
+#resultado-moeda {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  pointer-events: none; /* não bloqueia clique no tabuleiro por baixo */
+}
+#resultado-moeda[hidden] {
+  display: none;
+}
+.resultado-moeda-conteudo {
+  border: 1.5px solid transparent;
+  border-radius: 12px;
+  background:
+    linear-gradient(rgba(10, 8, 20, 0.92), rgba(10, 8, 20, 0.92)) padding-box,
+    var(--borda-ouro) border-box;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.7);
+  padding: 18px 30px;
+  max-width: min(88vw, 440px);
+  text-align: center;
+  font-family: "Cinzel", "Georgia", serif;
+  font-size: 18px;
+  letter-spacing: 0.3px;
+  color: #f0d98a;
+  animation: resultado-moeda-desvanecer 5s ease forwards;
+}
+.resultado-moeda-conteudo strong {
+  font-size: 27px;
+}
+.resultado-moeda-sub {
+  display: block;
+  margin-top: 8px;
+  font-family: "EB Garamond", "Georgia", serif;
+  font-size: 15px;
+  letter-spacing: 0;
+  color: #e8e0c8;
+}
+@keyframes resultado-moeda-desvanecer {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  8% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  82% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+/* borda em gradiente metálico via truque padding-box + border-box */
+:root {
+  --borda-ouro: linear-gradient(135deg, #f0d98a, #a98a42 50%, #4a3c1e);
+  --borda-ouro-hover: linear-gradient(135deg, #ffe9ab, #d9c37a 50%, #8a7238);
+  --borda-madeira: linear-gradient(
+    160deg,
+    #8a6238,
+    #4a3018 35%,
+    #2a1a0c 65%,
+    #6b4526
+  );
+
+  /* paleta do grimório (hub): tinta sobre pergaminho, não dourado sobre negro */
+  --tinta: #34281a;
+  --tinta-clara: #6b543a;
+  --tinta-apagada: #6e5a42;
+  --pergaminho: #ecdfba;
+  --pergaminho-sombra: #cdb583;
+  --brilho-roxo: #6d3fc9;
+  --brilho-roxo-claro: #9b6bf2;
+  --selo-cera: #5c1414;
+  --selo-cera-clara: #8a2424;
+}
+/* ---- HUD: placar rúnico com retrato, nome e relógio por jogador ---- */
+#hud {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  left: max(12px, env(safe-area-inset-left));
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: min(94vw, 460px);
+}
+#status {
+  display: block;
+  font-family: "Cinzel", "Georgia", serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  text-align: center;
+  color: #f0d98a;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  background: rgba(10, 8, 16, 0.6);
+  border: 1px solid rgba(217, 195, 122, 0.35);
+  border-radius: 20px;
+  padding: 4px 14px;
+}
+#status:empty {
+  display: none;
+}
+#placar {
+  font-family: "Cinzel", "Georgia", serif;
+  font-size: 11px;
+  color: #d9c37a;
+  opacity: 0.85;
+  letter-spacing: 0.2px;
+}
+#placar:empty {
+  display: none;
+}
+
+/* friso com retrato + nome + relógio de cada jogador, relógio central
+   decorativo e 3 soquetes de ícone (voz/ajuda/config) na faixa direita */
+#hud-banner {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 900 / 231;
+  background: url("/assets/hub/placar.webp") center / 100% 100% no-repeat;
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.5));
+}
+.jogador {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.jogador-retrato {
+  position: absolute;
+  top: 50%;
+  width: 14.3%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+}
+.jogador-brancas .jogador-retrato {
+  left: 13.3%;
+  background-image: url("/assets/hub/emblema-bruxo.webp");
+}
+.jogador-pretas .jogador-retrato {
+  left: 82.3%;
+  background-image: url("/assets/hub/emblema-golem.webp");
+}
+/* cristal que acende quando é a vez daquele jogador — em vez de flutuar
+   sobre o retrato, ele acende a gema pequena que já existe na moldura
+   (entre o retrato e o disco central), reaproveitando .relogio-ativo/
+   .relogio-baixo que já existia */
+.jogador-cristal {
+  position: absolute;
+  top: 87%;
+  width: 1.3%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: linear-gradient(145deg, #4a3a68, #201530);
+  border: 1px solid rgba(155, 107, 242, 0.4);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+  opacity: 0.7;
+  transition:
+    opacity 0.25s,
+    background 0.25s,
+    box-shadow 0.25s;
+}
+.jogador-brancas .jogador-cristal {
+  left: 21%;
+}
+.jogador-pretas .jogador-cristal {
+  left: 75%;
+}
+.relogio-ativo .jogador-cristal {
+  opacity: 1;
+  background: linear-gradient(145deg, #b98bff, #6d3fc9);
+  box-shadow: 0 0 10px 2px rgba(155, 107, 242, 0.9);
+}
+.relogio-baixo .jogador-cristal {
+  background: linear-gradient(145deg, #ff8f78, #b84a3a);
+}
+.relogio-ativo.relogio-baixo .jogador-cristal {
+  animation: pulsar-relogio 1s ease-in-out infinite;
+}
+@keyframes pulsar-relogio {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+/* nome (placa de cima) e pontuação (placa de baixo) — duas caixas
+   separadas na arte, cada uma com espaço de sobra pra uma linha */
+.jogador-nome,
+.jogador-pontuacao {
+  position: absolute;
+  width: 17%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  font-family: "Cinzel", "Georgia", serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.jogador-brancas .jogador-nome,
+.jogador-brancas .jogador-pontuacao {
+  left: 32.6%;
+}
+.jogador-pretas .jogador-nome,
+.jogador-pretas .jogador-pontuacao {
+  left: 64%;
+}
+.jogador-nome {
+  top: 30.4%;
+  font-size: 13px;
+  font-weight: 700;
+  color: #e8dcc0;
+  letter-spacing: 0.2px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+.jogador-pontuacao {
+  top: 68.9%;
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  transition:
+    opacity 0.2s,
+    color 0.2s,
+    text-shadow 0.2s;
+}
+.jogador-brancas .jogador-pontuacao {
+  color: #ffe9ab;
+}
+.jogador-pretas .jogador-pontuacao {
+  color: #bfe6ff;
+}
+.relogio-ativo .jogador-pontuacao {
+  opacity: 1;
+  text-shadow:
+    0 0 8px currentColor,
+    0 1px 3px rgba(0, 0, 0, 0.9);
+}
+.relogio-baixo .jogador-pontuacao {
+  color: #ff8f78;
+}
+/* relógio central: mostra o tempo de quem tem a vez agora, trocando de
+   cor conforme o lado — dourado nas brancas, gelo nas pretas */
+#relogio-central {
+  position: absolute;
+  top: 49.6%;
+  left: 48.3%;
+  width: 15%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  font-family: "Cinzel", "Georgia", serif;
+  font-variant-numeric: tabular-nums;
+  font-size: 16px;
+  font-weight: 700;
+  color: #d9c37a;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 1);
+  transition:
+    color 0.3s,
+    text-shadow 0.3s;
+}
+#relogio-central.relogio-central-brancas {
+  color: #ffe9ab;
+  text-shadow:
+    0 0 10px rgba(255, 179, 71, 0.7),
+    0 1px 3px black;
+}
+#relogio-central.relogio-central-pretas {
+  color: #bfe6ff;
+  text-shadow:
+    0 0 10px rgba(111, 208, 255, 0.7),
+    0 1px 3px black;
+}
+#relogio-central.relogio-baixo {
+  color: #ff8f78;
+  animation: pulsar-relogio 1s ease-in-out infinite;
+}
+/* faixa "sua vez" — some flutuando logo abaixo do cristal aceso */
+#aviso-vez {
+  position: absolute;
+  top: 108%;
+  width: max-content;
+  max-width: 46%;
+  padding: 3px 10px;
+  text-align: center;
+  font-family: "Cinzel", "Georgia", serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  color: #f6e3ff;
+  background: linear-gradient(160deg, #3a1a5c, #190a28);
+  border: 1px solid rgba(216, 154, 255, 0.7);
+  clip-path: polygon(4% 0, 96% 0, 100% 50%, 96% 100%, 4% 100%, 0 50%);
+  box-shadow:
+    0 0 10px 2px rgba(185, 107, 242, 0.7),
+    inset 0 0 6px rgba(185, 107, 242, 0.35);
+  text-shadow: 0 0 6px rgba(216, 154, 255, 0.9);
+  opacity: 0;
+  transform: translate(-50%, -4px) scale(0.92);
+  transition:
+    opacity 0.25s,
+    transform 0.25s;
+  pointer-events: none;
+  z-index: 3;
+}
+#aviso-vez.aviso-vez-visivel {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+#aviso-vez.aviso-vez-brancas {
+  left: 21%;
+}
+#aviso-vez.aviso-vez-pretas {
+  left: 75%;
+}
+#hud-acoes {
+  position: absolute;
+  inset: 0;
+}
+#botao-voz {
+  top: 27.27%;
+}
+#botao-ajuda {
+  top: 49.78%;
+}
+#botao-config {
+  top: 72.29%;
+}
+select,
+button {
+  background: #1a1626;
+  color: #e8e0c8;
+  border: 1px solid #6a5a2a;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+button:hover,
+select:hover {
+  border-color: #d9c37a;
+}
+.icone-btn {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  padding: 0;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid transparent;
+  border-radius: 8px;
+  background:
+    linear-gradient(#1a1626, #1a1626) padding-box,
+    var(--borda-ouro) border-box;
+}
+.icone-btn:hover {
+  background:
+    linear-gradient(#221c30, #221c30) padding-box,
+    var(--borda-ouro-hover) border-box;
+}
+.icone-btn svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+/* versão compacta dos 3 botões, encaixados nos soquetes do friso do placar */
+#hud-acoes .icone-btn {
+  position: absolute;
+  left: 95.89%;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: auto;
+}
+#hud-acoes .icone-btn svg {
+  width: 12px;
+  height: 12px;
+}
+#botao-voz.escutando {
+  color: #ffb199;
+  background:
+    linear-gradient(#1a1626, #1a1626) padding-box,
+    linear-gradient(135deg, #ff8f78, #b84a3a 55%, #6b2318) border-box;
+  animation: pulsar-voz 1s ease-in-out infinite;
+}
+@keyframes pulsar-voz {
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgba(184, 74, 58, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(184, 74, 58, 0.6);
+  }
+}
+#status-voz {
+  font-size: 11px;
+  opacity: 0.8;
+  font-style: italic;
+  margin: 0;
+}
+#status-voz:empty {
+  display: none;
+}
+
+/* ---- registro de lances: pergaminho rúnico (recolhível) ---- */
+#log-painel {
+  position: absolute;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  left: max(12px, env(safe-area-inset-left));
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+#log-moldura {
+  position: relative;
+  width: min(58vw, 210px);
+  aspect-ratio: 440 / 668;
+  background: url("/assets/hub/historico.webp") center / 100% 100% no-repeat;
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.5));
+  order: -1;
+}
+#log-moldura.recolhido {
+  display: none;
+}
+#log-titulo {
+  position: absolute;
+  top: 6%;
+  left: 11%;
+  width: 78%;
+  text-align: center;
+  font-family: "Cinzel", "Georgia", serif;
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  color: #3a2c18;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+#log {
+  position: absolute;
+  top: 28%;
+  left: 15%;
+  right: 13.6%;
+  bottom: 7.2%;
+  box-sizing: border-box;
+  padding: 2px 4px;
+  font-size: 10.5px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(52, 40, 26, 0.5) transparent;
+}
+#log::-webkit-scrollbar {
+  width: 6px;
+}
+#log::-webkit-scrollbar-thumb {
+  background: rgba(52, 40, 26, 0.5);
+  border-radius: 3px;
+}
+#log::-webkit-scrollbar-track {
+  background: transparent;
+}
+/* entrada mais recente em destaque total, anteriores vão apagando — em
+   vez de opacidade (que mistura o marrom com o pergaminho claro e lava
+   o contraste), cada nível usa um tom de marrom sólido e mais legível */
+#log div {
+  color: #4a3a26;
+  margin: 0;
+  padding: 3px 6px;
+  border-radius: 4px;
+  line-height: 1.4;
+  transition:
+    color 0.25s,
+    background-color 0.25s;
+}
+#log div:first-child {
+  background: #241d30;
+  color: #e8e0c8;
+}
+#log div:nth-child(2) {
+  color: #241a08;
+}
+#log div:nth-child(3) {
+  color: #38290f;
+}
+
+/* ---- popover de configurações ---- */
+.campo-config {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+.campo-config select,
+.campo-config > button {
+  display: block;
+  width: 100%;
+  margin-top: 5px;
+  padding: 6px 8px;
+}
+.campo-sorteio {
+  display: flex;
+  gap: 8px;
+  margin-top: 5px;
+}
+.campo-sorteio button {
+  flex: 1;
+  padding: 7px 8px;
+}
+.campo-sorteio button.chamada-vencedora {
+  border-color: #6fae52;
+  color: #c9f0b8;
+}
+#modal-config .modal-conteudo {
+  max-width: 320px;
+}
+#modal-config button#reiniciar {
+  width: 100%;
+  padding: 8px;
+  margin-top: 4px;
+}
+.campo-config.oculto {
+  display: none;
+}
+
+/* ---- mobile ---- */
+@media (max-width: 640px) {
+  .icone-btn {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    font-size: 17px;
+  }
+  .icone-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+  #hud {
+    width: min(94vw, 380px);
+  }
+  #log-moldura {
+    width: min(66vw, 195px);
+  }
+  .modal-conteudo {
+    padding: 18px 16px 20px;
+  }
+  #hub-inicial .grimorio {
+    border-width: 30px 34px;
+    border-image-width: 30px 34px;
+  }
+  #hub-inicial .mascote-coruja {
+    width: 46px;
+    top: -18px;
+    left: 10px;
+  }
+  #hub-inicial .mascote-dragao {
+    width: 46px;
+    top: -16px;
+    right: 10px;
+  }
+  #hub-inicial .pagina {
+    padding: 34px 16px 14px;
+  }
+  #hub-inicial .pagina-direita {
+    padding-right: 46px;
+  }
+  #hub-inicial .hub-titulo {
+    font-size: 18px;
+    top: -24px;
+  }
+  #hub-inicial .toggle-btn {
+    font-size: 13px;
+  }
+  #hub-inicial .toggle-grupo {
+    gap: 12px;
+  }
+  #hub-inicial .fita-perfil {
+    width: 68px;
+    right: -30px;
+    font-size: 8.5px;
+  }
+  #hub-inicial .fita-perfil .stat b {
+    font-size: 10.5px;
+  }
+  #hub-inicial .selo-iniciar {
+    width: 96px;
+    height: 96px;
+    font-size: 11px;
+  }
+  #hub-inicial .hub-linha-dupla {
+    grid-template-columns: 1fr;
+  }
+  .diagramas-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+}
+
+/* trava de orientação: em retrato, mostra só a capa fechada pedindo pra girar */
+.grimorio-bloqueio {
+  display: none;
+}
+@media (orientation: portrait) and (max-width: 900px) {
+  #hub-inicial .grimorio,
+  #hub-inicial .mascote {
+    display: none;
+  }
+  #hub-inicial .grimorio-bloqueio {
+    display: flex;
+  }
+}
+
+/* tela baixa (celular em paisagem): gatilho por altura, não largura —
+   afrouxa a proporção do livro e encolhe bordas/espaçamentos */
+@media (max-height: 460px) {
+  #hub-inicial .grimorio {
+    aspect-ratio: 16 / 12.5;
+    border-width: 34px 40px;
+    border-image-width: 34px 40px;
+  }
+  #hub-inicial .mascote-coruja,
+  #hub-inicial .mascote-dragao {
+    width: 42px;
+  }
+  #hub-inicial .mascote-coruja {
+    top: -16px;
+  }
+  #hub-inicial .mascote-dragao {
+    top: -14px;
+  }
+  #hub-inicial .hub-titulo {
+    top: -30px;
+    font-size: 19px;
+  }
+  #hub-inicial .pagina {
+    padding: 28px 20px 10px;
+  }
+  /* a fita do perfil invade a página direita — compensa com padding extra */
+  #hub-inicial .pagina-direita {
+    padding-right: 56px;
+  }
+  #hub-inicial .hub-subtitulo {
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+  #hub-inicial .campo-config.toggle-campo {
+    margin-bottom: 8px;
+  }
+  #hub-inicial .toggle-grupo {
+    gap: 10px;
+  }
+  #hub-inicial .campo-rotulo {
+    margin-bottom: 4px;
+  }
+  #hub-inicial .selo-iniciar {
+    width: 82px;
+    height: 82px;
+    font-size: 10px;
+    margin: 10px auto 4px;
+  }
+  #hub-inicial .fita-perfil {
+    top: 30px;
+    padding-top: 24px;
+  }
+  #hub-inicial .fita-perfil .stat {
+    margin-bottom: 5px;
+  }
+}
+
+/* ---- modal de ajuda / regras ---- */
+.modal-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  background: rgba(4, 3, 8, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.modal-overlay[hidden] {
+  display: none;
+}
+.modal-conteudo {
+  position: relative;
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  background:
+    linear-gradient(#14101e, #14101e) padding-box,
+    var(--borda-ouro) border-box;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+  max-width: 640px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 22px 26px 26px;
+}
+.modal-conteudo h2 {
+  font-family: "Cinzel", "Georgia", serif;
+  margin: 0 0 4px;
+  color: #d9c37a;
+  letter-spacing: 1px;
+  font-size: 19px;
+}
+.modal-conteudo h3 {
+  font-family: "Cinzel", "Georgia", serif;
+  color: #d9c37a;
+  font-size: 13.5px;
+  letter-spacing: 0.4px;
+  margin: 22px 0 8px;
+  border-bottom: 1px solid #4a4030;
+  padding-bottom: 4px;
+}
+.modal-conteudo p,
+.modal-conteudo li {
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+.modal-conteudo ul {
+  margin: 0;
+  padding-left: 20px;
+}
+.modal-conteudo li {
+  margin-bottom: 6px;
+}
+.modal-conteudo li strong {
+  color: #f0d98a;
+}
+.modal-fechar {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: transparent;
+  border: 1px solid #6a5a2a;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  line-height: 1;
+  padding: 0;
+  font-size: 14px;
+}
+/* hub inicial v2: grimório aberto sobre a mesa, duas páginas lado a
+   lado (grid de 2 colunas), sem abas — tudo visível ao mesmo tempo.
+   Pede paisagem (ver .grimorio-bloqueio). */
+#hub-inicial {
+  z-index: 55;
+  /* Crimson Text só aqui: mais legível que EB Garamond em itálico pequeno */
+  font-family: "Crimson Text", "EB Garamond", Georgia, serif;
+}
+/* mesa de madeira atrás do livro, só neste modal */
+#hub-inicial.modal-overlay {
+  background:
+    radial-gradient(
+      ellipse 90% 75% at 50% 42%,
+      rgba(0, 0, 0, 0) 0%,
+      rgba(0, 0, 0, 0.55) 100%
+    ),
+    url("/assets/hub/mesa.webp") center / cover no-repeat,
+    linear-gradient(160deg, #4a2f1c, #2f1c10 55%, #1c1009);
+  /* livro mantém tamanho de letra legível; se não couber na tela,
+     o overlay rola em vez do texto espremer */
+  align-items: flex-start;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+#hub-inicial .grimorio {
+  margin-top: auto;
+  margin-bottom: auto;
+}
+#hub-inicial,
+#hub-inicial *,
+#hub-inicial *::before,
+#hub-inicial *::after {
+  box-sizing: border-box;
+}
+.grimorio {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  aspect-ratio: 16 / 9.5;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-style: solid;
+  border-width: 64px 76px;
+  border-image-source: url("/assets/hub/moldura.webp");
+  border-image-slice: 109 109 105 108;
+  border-image-repeat: round stretch;
+  border-image-width: 64px 76px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6);
+}
+/* dobra central: sombra suave em vez de borda rígida */
+.lombada {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 46px;
+  transform: translateX(-50%);
+  z-index: 3;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 0, 0, 0.16) 42%,
+    rgba(0, 0, 0, 0.22) 50%,
+    rgba(0, 0, 0, 0.16) 58%,
+    transparent
+  );
+}
+/* título só texto (sem placa/imagem), na fonte decorativa sem acentos */
+.hub-titulo {
+  position: absolute;
+  top: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  margin: 0;
+  font-family: "Wild Breath", "Cinzel", serif;
+  font-size: 30px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  color: #f0d98a;
+  text-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.8),
+    0 0 18px rgba(155, 107, 242, 0.55);
+  pointer-events: none;
+}
+.pagina {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 46px 44px 28px;
+  /* a própria imagem já traz a borda rasgada pintada */
+  background: url("/assets/hub/pergaminho.webp") center / 100% 100% no-repeat;
+  color: var(--tinta);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(52, 40, 26, 0.5) transparent;
+}
+.pagina::-webkit-scrollbar {
+  width: 6px;
+}
+.pagina::-webkit-scrollbar-thumb {
+  background: rgba(52, 40, 26, 0.5);
+  border-radius: 3px;
+}
+.pagina::-webkit-scrollbar-track {
+  background: transparent;
+}
+.pagina-esquerda {
+  padding-right: 34px;
+}
+.pagina-direita {
+  padding-left: 34px;
+  display: flex;
+  flex-direction: column;
+}
+.pagina-direita .selo-iniciar {
+  margin-top: auto;
+  flex-shrink: 0;
+}
+.hub-subtitulo {
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--tinta-clara);
+  margin: 0 0 18px;
+}
+/* faixa-título pintada — aspect-ratio fixo mantém o texto na área lisa central */
+.fita-titulo {
+  position: relative;
+  margin: 0 auto 20px;
+  width: min(300px, 92%);
+  aspect-ratio: 2584 / 962;
+  background: url("/assets/hub/faixa-titulo.webp") center / 100% 100% no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 22%;
+}
+.fita-titulo span {
+  font-family: "Cinzel", "Georgia", serif;
+  font-size: 12px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #3a2c18;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+  line-height: 1.15;
+}
+/* mascotes ancorados nas quinas do livro, presos ao container */
+.mascote {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5));
+}
+.mascote-coruja {
+  top: -30px;
+  left: 34px;
+  width: 68px;
+}
+.mascote-dragao {
+  top: -28px;
+  right: 34px;
+  width: 68px;
+}
+.hub-linha-dupla {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.campo-rotulo {
+  display: block;
+  font-family: "Cinzel", "Georgia", serif;
+  font-size: 11.5px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--tinta-apagada);
+  margin-bottom: 8px;
+}
+/* botões de alternância: opções escritas a tinta sobre o pergaminho.
+   Hover risca um sublinhado; ativo fica com tinta mais escura + brilho roxo. */
+.toggle-grupo {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.toggle-btn {
+  position: relative;
+  padding: 4px 1px 6px;
+  font-family: "Cinzel", "Georgia", serif;
+  font-size: 15px;
+  letter-spacing: 0.2px;
+  text-align: left;
+  background: none;
+  color: var(--tinta-apagada);
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+.toggle-btn::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 1.5px;
+  width: 0%;
+  background: linear-gradient(90deg, var(--brilho-roxo), var(--tinta));
+  transition: width 0.25s ease;
+}
+.toggle-btn:hover {
+  color: var(--tinta);
+}
+.toggle-btn:hover::after {
+  width: 100%;
+}
+.toggle-btn.ativo {
+  color: var(--tinta);
+  text-shadow: 0 0 7px rgba(109, 63, 201, 0.35);
+}
+.toggle-btn.ativo::after {
+  width: 100%;
+}
+.campo-config.toggle-campo {
+  margin-bottom: 16px;
+}
+/* select nativo (mantido por acessibilidade/teclado/mobile), estilizado
+   como um traço embaixo em vez da caixa cinza padrão */
+#hub-inicial select {
+  width: 100%;
+  padding: 6px 22px 6px 2px;
+  font-family: "Crimson Text", "EB Garamond", "Georgia", serif;
+  font-size: 15.5px;
+  color: var(--tinta);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(52, 40, 26, 0.4);
+  border-radius: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--tinta) 50%),
+    linear-gradient(135deg, var(--tinta) 50%, transparent 50%);
+  background-position:
+    calc(100% - 13px) center,
+    calc(100% - 8px) center;
+  background-size:
+    5px 5px,
+    5px 5px;
+  background-repeat: no-repeat;
+}
+#hub-inicial select:hover,
+#hub-inicial select:focus {
+  border-bottom-color: var(--brilho-roxo);
+  outline: none;
+}
+/* selo de cera / círculo alquímico: botão "Iniciar Partida", redondo,
+   com animação de prensa (0.4s) antes de seguir o fluxo normal */
+.selo-iniciar {
+  position: relative;
+  width: 128px;
+  height: 128px;
+  margin: 18px auto 6px;
+  border-radius: 50%;
+  border: 2px solid rgba(217, 195, 122, 0.55);
+  background: radial-gradient(
+    circle at 38% 32%,
+    var(--selo-cera-clara),
+    var(--selo-cera) 60%,
+    #240707 100%
+  );
+  color: #f0d98a;
+  font-family: "Cinzel", "Georgia", serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+  cursor: pointer;
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 6px rgba(217, 195, 122, 0.12),
+    inset 0 0 0 9px rgba(217, 195, 122, 0.22);
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.12s ease;
+}
+.selo-iniciar::before {
+  content: "";
+  position: absolute;
+  inset: 16px;
+  border-radius: 50%;
+  border: 1px dashed rgba(217, 195, 122, 0.4);
+}
+.selo-iniciar:hover:not(:disabled) {
+  box-shadow:
+    0 10px 26px rgba(0, 0, 0, 0.5),
+    0 0 24px rgba(217, 195, 122, 0.35),
+    inset 0 0 0 6px rgba(217, 195, 122, 0.16),
+    inset 0 0 0 9px rgba(217, 195, 122, 0.28);
+}
+.selo-iniciar:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.selo-iniciar.selando {
+  animation: selo-prensar 0.4s ease;
+}
+@keyframes selo-prensar {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.45);
+  }
+  40% {
+    transform: scale(0.94) translateY(2px);
+  }
+  60% {
+    box-shadow:
+      0 10px 22px rgba(0, 0, 0, 0.45),
+      0 0 34px 8px rgba(217, 195, 122, 0.55);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.45);
+  }
+}
+/* transição de saída do hub: o livro encolhe/desfoca enquanto a câmera
+   (ver iniciarMergulhoCamera em main.js) mergulha pra posição de jogo —
+   substitui o corte seco de hidden=true por um mergulho contínuo */
+#hub-inicial {
+  transition: opacity 0.65s ease-in;
+}
+#hub-inicial.hub-mergulhando {
+  opacity: 0;
+  pointer-events: none;
+}
+.grimorio {
+  transition:
+    transform 0.65s cubic-bezier(0.55, 0, 1, 0.45),
+    filter 0.65s ease-in;
+}
+#hub-inicial.hub-mergulhando .grimorio {
+  transform: scale(0.15);
+  filter: blur(16px);
+}
+.hub-mergulhando .selo-iniciar {
+  animation: selo-flash 0.4s ease-out;
+}
+@keyframes selo-flash {
+  0% {
+    box-shadow: 0 0 0 0 rgba(217, 195, 122, 0);
+  }
+  30% {
+    box-shadow: 0 0 46px 14px rgba(217, 195, 122, 0.9);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(217, 195, 122, 0);
+  }
+}
+/* índice de líderes: texto puro, sem tabela — linha pontilhada
+   guiando o olho até a pontuação, como um índice de livro antigo */
+.page-kicker-hub {
+  font-family: "Cinzel", "Georgia", serif;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--tinta-apagada);
+  margin: 0 0 8px;
+}
+.indice-lideres,
+.indice-recentes {
+  list-style: none;
+  margin: 0 0 4px;
+  padding: 0;
+}
+.indice-vazio {
+  font-size: 14.5px;
+  color: var(--tinta-clara);
+  line-height: 1.55;
+  margin: 0 0 4px;
+}
+.indice-lideres li,
+.indice-recentes li {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 0;
+  font-size: 14.5px;
+}
+.indice-rank {
+  font-family: "Cinzel", serif;
+  color: var(--tinta-apagada);
+  width: 22px;
+  flex-shrink: 0;
+}
+.indice-nome {
+  white-space: nowrap;
+}
+.indice-leader {
+  flex: 1;
+  border-bottom: 1px dotted rgba(52, 40, 26, 0.4);
+  margin: 0 4px;
+  min-width: 12px;
+}
+.indice-pontos {
+  font-family: "Cinzel", serif;
+  color: var(--tinta);
+  white-space: nowrap;
+}
+.indice-recentes li {
+  font-size: 12.5px;
+  color: var(--tinta-clara);
+  opacity: 0.9;
+}
+.hub-limpar-link {
+  margin-top: 10px;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 11px;
+  font-style: italic;
+  color: var(--tinta-apagada);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.hub-limpar-link:hover {
+  color: var(--tinta);
+}
+/* fita do perfil, pendurada na lateral direita como um marcador de página */
+.fita-perfil {
+  position: absolute;
+  top: 54px;
+  right: -58px;
+  z-index: 4;
+  width: 104px;
+  padding: 30px 8px 16px;
+  background: linear-gradient(160deg, #5c1a1a, #34100f);
+  clip-path: polygon(0 0, 100% 0, 100% 90%, 50% 100%, 0 90%);
+  box-shadow: 3px 8px 16px rgba(0, 0, 0, 0.4);
+  text-align: center;
+  color: #ecdfba;
+}
+/* emblema (rune/gema) preso no alto da fita, como um broche */
+.fita-perfil::before {
+  content: "◈";
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #f0d98a, #a2823f 75%);
+  color: #4a1010;
+  font-size: 13px;
+  line-height: 22px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+.fita-perfil .stat {
+  margin-bottom: 8px;
+  font-family: "Cinzel", "Georgia", serif;
+  font-size: 10px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  opacity: 0.92;
+}
+.fita-perfil .stat b {
+  display: block;
+  font-family: "Cinzel", serif;
+  font-size: 15px;
+  color: #f0d98a;
+  letter-spacing: 0;
+  text-transform: none;
+  margin-top: 1px;
+}
+/* overlay de bloqueio por orientação: capa fechada + convite a girar o aparelho */
+.grimorio-bloqueio {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  background: radial-gradient(ellipse at 50% 40%, #241a13, #0d0904);
+  padding: 32px;
+  text-align: center;
+}
+.capa-fechada {
+  width: 140px;
+  height: 190px;
+  border-radius: 4px;
+  background: linear-gradient(160deg, #5c3c22, #2a1810);
+  border: 3px solid rgba(217, 195, 122, 0.5);
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 8px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  color: rgba(217, 195, 122, 0.8);
+}
+.mensagem-girar {
+  font-family: "Cinzel", "Georgia", serif;
+  font-size: 15px;
+  color: #f0d98a;
+  max-width: 260px;
+  line-height: 1.5;
+  animation: pulsar-mensagem 1.8s ease-in-out infinite;
+}
+@keyframes pulsar-mensagem {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.diagramas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-top: 4px;
+}
+.diagrama {
+  text-align: center;
+}
+.diagrama-titulo {
+  font-size: 12.5px;
+  color: #f0d98a;
+  margin-bottom: 6px;
+}
+.diagrama-legenda {
+  font-size: 11px;
+  opacity: 0.75;
+  margin-top: 5px;
+}
+.mini-tabuleiro {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  width: 100%;
+  aspect-ratio: 1;
+  border: 1px solid #4a4030;
+  margin: 0 auto;
+}
+.mini-casa {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.mini-casa.clara {
+  background: #cabb8e;
+}
+.mini-casa.escura {
+  background: #3a3226;
+}
+.mini-casa .marcador {
+  width: 34%;
+  height: 34%;
+  border-radius: 50%;
+  background: #d9c37a;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.6);
+}
+.mini-casa .marcador.captura {
+  background: #b84a3a;
+}
+.mini-casa .peca {
+  width: 62%;
+  height: 62%;
+  border-radius: 50%;
+  background: #6fae52;
+  border: 2px solid #2f5a20;
+}
