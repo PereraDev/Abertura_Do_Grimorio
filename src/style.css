@@ -718,6 +718,31 @@ select:hover {
   .tela-grimorio .fita-perfil .stat {
     margin-bottom: 5px;
   }
+  /* celular em paisagem: placar e registro em tamanho de desktop tomavam
+     quase metade da tela curta, cobrindo o tabuleiro — mesmo gatilho de
+     altura já usado acima pro hub, agora pro HUD do jogo em si */
+  #hud {
+    width: min(60vw, 300px);
+  }
+  #status {
+    font-size: 10px;
+    padding: 3px 10px;
+  }
+  #placar {
+    font-size: 9.5px;
+  }
+  #log-moldura {
+    width: min(32vw, 130px);
+  }
+  #log-titulo {
+    font-size: 9px;
+  }
+  #log {
+    font-size: 9px;
+  }
+  #log div {
+    padding: 2px 4px;
+  }
 }
 
 /* ---- modal de ajuda / regras ---- */
