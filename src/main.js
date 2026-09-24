@@ -2352,6 +2352,61 @@ document.getElementById("reiniciar").addEventListener("click", () => {
 });
 
 /* ============================================================
+   Tela do pacto (login) — porta de entrada antes do hub. Não há conta
+   real nem servidor: só valida que os campos foram preenchidos e guarda
+   o nome de conjurador localmente, como o resto do progresso do jogo.
+   ============================================================ */
+const telaPacto = document.getElementById("tela-pacto");
+const formPacto = document.getElementById("form-pacto");
+const pactoErro = document.getElementById("pacto-erro");
+// o selo do pacto e o selo "Iniciar Partida" ocupam a mesma posição na tela;
+// um clique segurado que começa no selo do pacto e solta já em cima do selo
+// do hub (ou um clique duplo residual) dispara o botão do hub sem o usuário
+// ter visto a aba de configuração. Guarda por timestamp, checada dentro do
+// próprio handler do botão — funciona não importa a mecânica exata do
+// clique (mousedown/mouseup, duplo clique, teclado), ao contrário de um
+// pointer-events temporário, que só bloqueia mouse.
+let hubReveladoEm = 0;
+
+function mostrarNotaPacto(texto) {
+  pactoErro.textContent = texto;
+  pactoErro.hidden = false;
+}
+
+formPacto.addEventListener("submit", async (evento) => {
+  evento.preventDefault();
+  const nome = document.getElementById("pacto-nome").value.trim();
+  const senha = document.getElementById("pacto-senha").value;
+  if (!nome || !senha) {
+    mostrarNotaPacto("Preencha o nome de conjurador e a palavra-passe.");
+    return;
+  }
+  pactoErro.hidden = true;
+  localStorage.setItem("xadrezBruxos.nomeConjurador", nome);
+
+  // reaproveita a mesma dissolução (encolhe + desfoca + selo em flash)
+  // que o hub usa pra mergulhar no tabuleiro — mesma linguagem visual
+  telaPacto.classList.add("hub-mergulhando");
+  await esperar(650);
+  telaPacto.hidden = true;
+  hubInicial.hidden = false;
+  hubReveladoEm = performance.now();
+});
+
+document.getElementById("pacto-criar-conta").addEventListener("click", () => {
+  mostrarNotaPacto(
+    "Em breve — por ora o Grimório guarda seu progresso só neste dispositivo.",
+  );
+});
+document
+  .getElementById("pacto-esqueci-senha")
+  .addEventListener("click", () => {
+    mostrarNotaPacto(
+      "Em breve — por ora o Grimório guarda seu progresso só neste dispositivo.",
+    );
+  });
+
+/* ============================================================
    Hub inicial — tela de configuração antes da primeira partida.
    Modo/dificuldade/cor usam grupos de botões de alternância em vez
    de <select>, pra escolher com um clique.
@@ -2611,6 +2666,7 @@ function aplicarConfigHub() {
 const botaoSeloJogar = document.getElementById("hub-jogar");
 botaoSeloJogar.addEventListener("click", async () => {
   if (!orquestrador) return;
+  if (performance.now() - hubReveladoEm < 500) return; // ver comentário acima de hubReveladoEm
   // selo de cera prensado: feedback pesado de propósito, pra confirmar uma
   // decisão que já aplica todas as escolhas (não é um toggle qualquer)
   botaoSeloJogar.classList.add("selando");

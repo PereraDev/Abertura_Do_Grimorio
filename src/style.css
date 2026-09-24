@@ -597,50 +597,50 @@ select:hover {
   .modal-conteudo {
     padding: 18px 16px 20px;
   }
-  #hub-inicial .grimorio {
+  .tela-grimorio .grimorio {
     border-width: 30px 34px;
     border-image-width: 30px 34px;
   }
-  #hub-inicial .mascote-coruja {
+  .tela-grimorio .mascote-coruja {
     width: 46px;
     top: -18px;
     left: 10px;
   }
-  #hub-inicial .mascote-dragao {
+  .tela-grimorio .mascote-dragao {
     width: 46px;
     top: -16px;
     right: 10px;
   }
-  #hub-inicial .pagina {
+  .tela-grimorio .pagina {
     padding: 34px 16px 14px;
   }
-  #hub-inicial .pagina-direita {
+  .tela-grimorio .pagina-direita {
     padding-right: 46px;
   }
-  #hub-inicial .hub-titulo {
+  .tela-grimorio .hub-titulo {
     font-size: 18px;
     top: -24px;
   }
-  #hub-inicial .toggle-btn {
+  .tela-grimorio .toggle-btn {
     font-size: 13px;
   }
-  #hub-inicial .toggle-grupo {
+  .tela-grimorio .toggle-grupo {
     gap: 12px;
   }
-  #hub-inicial .fita-perfil {
+  .tela-grimorio .fita-perfil {
     width: 68px;
     right: -30px;
     font-size: 8.5px;
   }
-  #hub-inicial .fita-perfil .stat b {
+  .tela-grimorio .fita-perfil .stat b {
     font-size: 10.5px;
   }
-  #hub-inicial .selo-iniciar {
+  .tela-grimorio .selo-iniciar {
     width: 96px;
     height: 96px;
     font-size: 11px;
   }
-  #hub-inicial .hub-linha-dupla {
+  .tela-grimorio .hub-linha-dupla {
     grid-template-columns: 1fr;
   }
   .diagramas-grid {
@@ -654,11 +654,11 @@ select:hover {
   display: none;
 }
 @media (orientation: portrait) and (max-width: 900px) {
-  #hub-inicial .grimorio,
-  #hub-inicial .mascote {
+  .tela-grimorio .grimorio,
+  .tela-grimorio .mascote {
     display: none;
   }
-  #hub-inicial .grimorio-bloqueio {
+  .tela-grimorio .grimorio-bloqueio {
     display: flex;
   }
 }
@@ -666,56 +666,56 @@ select:hover {
 /* tela baixa (celular em paisagem): gatilho por altura, não largura —
    afrouxa a proporção do livro e encolhe bordas/espaçamentos */
 @media (max-height: 460px) {
-  #hub-inicial .grimorio {
+  .tela-grimorio .grimorio {
     aspect-ratio: 16 / 12.5;
     border-width: 34px 40px;
     border-image-width: 34px 40px;
   }
-  #hub-inicial .mascote-coruja,
-  #hub-inicial .mascote-dragao {
+  .tela-grimorio .mascote-coruja,
+  .tela-grimorio .mascote-dragao {
     width: 42px;
   }
-  #hub-inicial .mascote-coruja {
+  .tela-grimorio .mascote-coruja {
     top: -16px;
   }
-  #hub-inicial .mascote-dragao {
+  .tela-grimorio .mascote-dragao {
     top: -14px;
   }
-  #hub-inicial .hub-titulo {
+  .tela-grimorio .hub-titulo {
     top: -30px;
     font-size: 19px;
   }
-  #hub-inicial .pagina {
+  .tela-grimorio .pagina {
     padding: 28px 20px 10px;
   }
   /* a fita do perfil invade a página direita — compensa com padding extra */
-  #hub-inicial .pagina-direita {
+  .tela-grimorio .pagina-direita {
     padding-right: 56px;
   }
-  #hub-inicial .hub-subtitulo {
+  .tela-grimorio .hub-subtitulo {
     font-size: 13px;
     margin-bottom: 10px;
   }
-  #hub-inicial .campo-config.toggle-campo {
+  .tela-grimorio .campo-config.toggle-campo {
     margin-bottom: 8px;
   }
-  #hub-inicial .toggle-grupo {
+  .tela-grimorio .toggle-grupo {
     gap: 10px;
   }
-  #hub-inicial .campo-rotulo {
+  .tela-grimorio .campo-rotulo {
     margin-bottom: 4px;
   }
-  #hub-inicial .selo-iniciar {
+  .tela-grimorio .selo-iniciar {
     width: 82px;
     height: 82px;
     font-size: 10px;
     margin: 10px auto 4px;
   }
-  #hub-inicial .fita-perfil {
+  .tela-grimorio .fita-perfil {
     top: 30px;
     padding-top: 24px;
   }
-  #hub-inicial .fita-perfil .stat {
+  .tela-grimorio .fita-perfil .stat {
     margin-bottom: 5px;
   }
 }
@@ -795,13 +795,13 @@ select:hover {
 /* hub inicial v2: grimório aberto sobre a mesa, duas páginas lado a
    lado (grid de 2 colunas), sem abas — tudo visível ao mesmo tempo.
    Pede paisagem (ver .grimorio-bloqueio). */
-#hub-inicial {
+.tela-grimorio {
   z-index: 55;
   /* Crimson Text só aqui: mais legível que EB Garamond em itálico pequeno */
   font-family: "Crimson Text", "EB Garamond", Georgia, serif;
 }
 /* mesa de madeira atrás do livro, só neste modal */
-#hub-inicial.modal-overlay {
+.tela-grimorio.modal-overlay {
   background:
     radial-gradient(
       ellipse 90% 75% at 50% 42%,
@@ -816,14 +816,14 @@ select:hover {
   overflow-y: auto;
   padding: 20px 24px;
 }
-#hub-inicial .grimorio {
+.tela-grimorio .grimorio {
   margin-top: auto;
   margin-bottom: auto;
 }
-#hub-inicial,
-#hub-inicial *,
-#hub-inicial *::before,
-#hub-inicial *::after {
+.tela-grimorio,
+.tela-grimorio *,
+.tela-grimorio *::before,
+.tela-grimorio *::after {
   box-sizing: border-box;
 }
 .grimorio {
@@ -905,6 +905,8 @@ select:hover {
 }
 .pagina-esquerda {
   padding-right: 34px;
+  display: flex;
+  flex-direction: column;
 }
 .pagina-direita {
   padding-left: 34px;
@@ -1021,7 +1023,7 @@ select:hover {
 }
 /* select nativo (mantido por acessibilidade/teclado/mobile), estilizado
    como um traço embaixo em vez da caixa cinza padrão */
-#hub-inicial select {
+.tela-grimorio select {
   width: 100%;
   padding: 6px 22px 6px 2px;
   font-family: "Crimson Text", "EB Garamond", "Georgia", serif;
@@ -1044,8 +1046,8 @@ select:hover {
     5px 5px;
   background-repeat: no-repeat;
 }
-#hub-inicial select:hover,
-#hub-inicial select:focus {
+.tela-grimorio select:hover,
+.tela-grimorio select:focus {
   border-bottom-color: var(--brilho-roxo);
   outline: none;
 }
@@ -1121,10 +1123,10 @@ select:hover {
 /* transição de saída do hub: o livro encolhe/desfoca enquanto a câmera
    (ver iniciarMergulhoCamera em main.js) mergulha pra posição de jogo —
    substitui o corte seco de hidden=true por um mergulho contínuo */
-#hub-inicial {
+.tela-grimorio {
   transition: opacity 0.65s ease-in;
 }
-#hub-inicial.hub-mergulhando {
+.tela-grimorio.hub-mergulhando {
   opacity: 0;
   pointer-events: none;
 }
@@ -1133,7 +1135,7 @@ select:hover {
     transform 0.65s cubic-bezier(0.55, 0, 1, 0.45),
     filter 0.65s ease-in;
 }
-#hub-inicial.hub-mergulhando .grimorio {
+.tela-grimorio.hub-mergulhando .grimorio {
   transform: scale(0.15);
   filter: blur(16px);
 }
@@ -1150,6 +1152,113 @@ select:hover {
   100% {
     box-shadow: 0 0 0 0 rgba(217, 195, 122, 0);
   }
+}
+/* tela do pacto (login): campos são pautas no pergaminho, não caixas —
+   sem fundo, sem borda fechada, só o traço de tinta embaixo */
+.pacto-boas-vindas {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.7;
+  color: var(--tinta-clara);
+}
+/* runas decorativas (Unicode, fonte Noto Sans Runic) — puro floreio
+   narrativo, sem significado literal, por isso aria-hidden */
+.pacto-runas {
+  margin: 22px 0 0;
+  font-family: "Noto Sans Runic", serif;
+  font-size: 28px;
+  letter-spacing: 3px;
+  line-height: 1.7;
+  color: var(--tinta-apagada);
+  opacity: 0.85;
+}
+.pacto-assinatura {
+  width: 170px;
+  height: 40px;
+  margin-top: auto;
+  fill: none;
+  stroke: var(--tinta-apagada);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  opacity: 0.6;
+}
+.pacto-form {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.campo-pacto {
+  display: block;
+  margin-bottom: 22px;
+}
+/* a linha (traço de tinta) pertence ao contêiner, não ao input — assim
+   o ícone rúnico e o texto digitado ficam sobre o mesmo traço */
+.campo-pacto-linha {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid rgba(52, 40, 26, 0.4);
+}
+.campo-pacto-icone {
+  font-family: "Noto Sans Runic", serif;
+  font-size: 15px;
+  color: var(--tinta-apagada);
+  flex-shrink: 0;
+}
+.campo-pacto input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 2px;
+  font-family: "Crimson Text", "EB Garamond", "Georgia", serif;
+  font-size: 16px;
+  color: var(--tinta);
+  background: none;
+  border: none;
+  border-radius: 0;
+}
+/* foco diegético: em vez do outline azul do navegador, o traço de tinta
+   vira brilho roxo — mesma linguagem do select do hub (consistência) */
+.campo-pacto-linha:hover,
+.campo-pacto-linha:focus-within {
+  border-bottom-color: var(--brilho-roxo);
+}
+.campo-pacto input:focus {
+  outline: none;
+}
+.campo-pacto-linha:focus-within {
+  box-shadow: 0 1px 6px -2px var(--brilho-roxo-claro);
+}
+.pacto-erro {
+  margin: -10px 0 14px;
+  font-size: 12.5px;
+  color: var(--selo-cera-clara);
+}
+/* selo do pacto pulsa em roxo (magia do juramento) em vez do brilho
+   dourado padrão do hub — reforça que esta tela é sobre o pacto, não
+   sobre iniciar uma partida */
+.pacto-form .selo-iniciar {
+  margin-top: 4px;
+  animation: selo-pacto-pulsar 2.6s ease-in-out infinite;
+}
+@keyframes selo-pacto-pulsar {
+  0%,
+  100% {
+    box-shadow:
+      0 10px 22px rgba(0, 0, 0, 0.45),
+      0 0 16px 2px rgba(155, 107, 242, 0.25);
+  }
+  50% {
+    box-shadow:
+      0 10px 22px rgba(0, 0, 0, 0.45),
+      0 0 30px 8px rgba(155, 107, 242, 0.55);
+  }
+}
+.pacto-links {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  margin-top: auto;
 }
 /* índice de líderes: texto puro, sem tabela — linha pontilhada
    guiando o olho até a pontuação, como um índice de livro antigo */

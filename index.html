@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Noto+Sans+Runic&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/src/style.css" />
@@ -130,7 +130,101 @@
       </div>
     </div>
 
-    <div id="hub-inicial" class="modal-overlay">
+    <div id="tela-pacto" class="tela-grimorio modal-overlay">
+      <div class="grimorio">
+        <img
+          class="mascote mascote-coruja"
+          src="/assets/hub/coruja.webp"
+          alt=""
+          aria-hidden="true"
+        />
+        <img
+          class="mascote mascote-dragao"
+          src="/assets/hub/dragao.webp"
+          alt=""
+          aria-hidden="true"
+        />
+        <div class="lombada" aria-hidden="true"></div>
+        <h1 class="hub-titulo">Abertura do Grimório</h1>
+
+        <section class="pagina pagina-esquerda" aria-label="Reconhecimento">
+          <p class="fita-titulo"><span>Reconhecimento</span></p>
+          <p class="pacto-boas-vindas">
+            Bem-vindo, Conjurador.<br />
+            Assine o pacto para destrancar os mistérios do Grimório.
+          </p>
+          <p class="pacto-runas" aria-hidden="true">
+            ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈ<br />
+            ᛉᛊᛏᛒᛖᛗᛚᛜᛟᛞ.
+          </p>
+          <svg
+            class="pacto-assinatura"
+            viewBox="0 0 160 40"
+            aria-hidden="true"
+          >
+            <path
+              d="M6 26 Q18 8 30 24 T54 22 Q62 10 70 24 T96 20 L110 30 Q118 14 130 26 T154 18"
+            />
+          </svg>
+        </section>
+
+        <section class="pagina pagina-direita" aria-label="Assinar o pacto">
+          <p class="fita-titulo"><span>Assinatura</span></p>
+
+          <form id="form-pacto" class="pacto-form" novalidate>
+            <label class="campo-pacto">
+              <span class="campo-rotulo">1. Nome de Conjurador</span>
+              <span class="campo-pacto-linha">
+                <span class="campo-pacto-icone" aria-hidden="true">ᛝ</span>
+                <input
+                  type="text"
+                  id="pacto-nome"
+                  name="nome"
+                  autocomplete="username"
+                  required
+                />
+              </span>
+            </label>
+
+            <label class="campo-pacto">
+              <span class="campo-rotulo">2. Palavra-Passe</span>
+              <span class="campo-pacto-linha">
+                <span class="campo-pacto-icone" aria-hidden="true">ᛟ</span>
+                <input
+                  type="password"
+                  id="pacto-senha"
+                  name="senha"
+                  autocomplete="current-password"
+                  required
+                />
+              </span>
+            </label>
+
+            <p id="pacto-erro" class="pacto-erro" role="alert" hidden></p>
+
+            <button type="submit" class="selo-iniciar">Abrir Grimório</button>
+
+            <div class="pacto-links">
+              <button type="button" id="pacto-criar-conta" class="hub-limpar-link">
+                Criar Conta
+              </button>
+              <button type="button" id="pacto-esqueci-senha" class="hub-limpar-link">
+                Esqueci a Senha
+              </button>
+            </div>
+          </form>
+        </section>
+      </div>
+
+      <div class="grimorio-bloqueio" aria-hidden="true">
+        <div class="capa-fechada">⚡</div>
+        <p class="mensagem-girar">
+          Gire o seu artefato para destrancar o Grimório
+        </p>
+      </div>
+    </div>
+
+    <div id="hub-inicial" class="tela-grimorio modal-overlay" hidden>
       <div class="grimorio">
         <img
           class="mascote mascote-coruja"
