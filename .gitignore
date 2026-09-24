@@ -2,6 +2,10 @@ models/pecas/antigo/
 Thumbs.db
 .DS_Store
 
+# histórico completo de desenvolvimento — só local, o README.md público
+# (no GitHub) fica enxuto, sem o log de cada sessão
+DEVLOG.md
+
 # saída de ferramentas/skills do Claude Code, não faz parte do jogo
 .agents/
 .claude/
