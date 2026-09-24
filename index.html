@@ -32,12 +32,14 @@
           <div class="jogador-cristal"></div>
           <div class="jogador-nome" id="nome-w">Você</div>
           <div class="jogador-pontuacao" id="pontos-w">1000</div>
+          <div class="jogador-tempo" id="tempo-w"></div>
         </div>
         <div class="jogador jogador-pretas" id="relogio-b">
           <div class="jogador-nome" id="nome-b">IA</div>
           <div class="jogador-pontuacao" id="pontos-b">1000</div>
           <div class="jogador-cristal"></div>
           <div class="jogador-retrato"></div>
+          <div class="jogador-tempo" id="tempo-b"></div>
         </div>
         <div id="relogio-central">15:00</div>
         <div id="aviso-vez"></div>
@@ -103,27 +105,39 @@
     </div>
 
     <div id="log-painel">
-      <button
-        id="log-toggle"
-        class="icone-btn"
-        title="Mostrar/ocultar registro"
-      >
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+      <div class="log-painel-botoes">
+        <button
+          id="log-toggle"
+          class="icone-btn"
+          title="Mostrar/ocultar registro"
         >
-          <line x1="8" y1="6" x2="21" y2="6"></line>
-          <line x1="8" y1="12" x2="21" y2="12"></line>
-          <line x1="8" y1="18" x2="21" y2="18"></line>
-          <line x1="3" y1="6" x2="3.01" y2="6"></line>
-          <line x1="3" y1="12" x2="3.01" y2="12"></line>
-          <line x1="3" y1="18" x2="3.01" y2="18"></line>
-        </svg>
-      </button>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="8" y1="6" x2="21" y2="6"></line>
+            <line x1="8" y1="12" x2="21" y2="12"></line>
+            <line x1="8" y1="18" x2="21" y2="18"></line>
+            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+          </svg>
+        </button>
+        <button id="botao-pausa" class="icone-btn" title="Pausar partida">
+          <svg
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            stroke="none"
+          >
+            <rect x="6" y="4" width="4" height="16" rx="1"></rect>
+            <rect x="14" y="4" width="4" height="16" rx="1"></rect>
+          </svg>
+        </button>
+      </div>
       <div id="log-moldura">
         <div id="log-titulo">Registro de Lances</div>
         <div id="log"></div>
@@ -248,6 +262,28 @@
           <div class="stat">Elo<b id="perfil-elo">1000</b></div>
         </div>
 
+        <div class="fita-nav fita-nav-esquerda" aria-label="Navegação do grimório">
+          <button
+            type="button"
+            id="hub-nav-historia"
+            class="fita-nav-item"
+            disabled
+          >
+            <span class="fita-nav-icone" aria-hidden="true">📜</span>
+            Historia
+          </button>
+          <button
+            type="button"
+            id="hub-nav-perfil"
+            class="fita-nav-item"
+            disabled
+            title="Em breve"
+          >
+            <span class="fita-nav-icone" aria-hidden="true">🧙</span>
+            Meu perfil
+          </button>
+        </div>
+
         <section class="pagina pagina-esquerda" aria-label="Configurar partida">
           <p class="fita-titulo"><span>Configurar Partida</span></p>
           <p class="hub-subtitulo">
@@ -312,6 +348,18 @@
             </div>
           </div>
 
+          <div class="campo-config toggle-campo">
+            <span class="campo-rotulo">Guia do tabuleiro</span>
+            <div class="toggle-grupo" id="hub-guia" data-valor="mostrar">
+              <button type="button" class="toggle-btn ativo" data-valor="mostrar">
+                Mostrar
+              </button>
+              <button type="button" class="toggle-btn" data-valor="ocultar">
+                Ocultar
+              </button>
+            </div>
+          </div>
+
           <div class="hub-linha-dupla">
             <label class="campo-config">
               <span class="campo-rotulo">Tempo de partida</span>
@@ -355,6 +403,74 @@
 
           <button id="hub-jogar" class="selo-iniciar" disabled>
             Carregando…
+          </button>
+        </section>
+      </div>
+
+      <div class="grimorio-bloqueio" aria-hidden="true">
+        <div class="capa-fechada">⚡</div>
+        <p class="mensagem-girar">
+          Gire o seu artefato para destrancar o Grimório
+        </p>
+      </div>
+    </div>
+
+    <div id="tela-codice" class="tela-grimorio modal-overlay" hidden>
+      <div class="grimorio">
+        <img
+          class="mascote mascote-coruja"
+          src="/assets/hub/coruja.webp"
+          alt=""
+          aria-hidden="true"
+        />
+        <img
+          class="mascote mascote-dragao"
+          src="/assets/hub/dragao.webp"
+          alt=""
+          aria-hidden="true"
+        />
+        <div class="lombada" aria-hidden="true"></div>
+        <h1 class="hub-titulo">Abertura do Grimório</h1>
+
+        <div class="fita-nav" aria-label="Navegação do grimório">
+          <button type="button" id="codice-portal" class="fita-nav-item">
+            <span class="fita-nav-icone" aria-hidden="true">💠</span>
+            Entrar no portal
+          </button>
+          <button
+            type="button"
+            id="codice-perfil"
+            class="fita-nav-item"
+            disabled
+            title="Em breve"
+          >
+            <span class="fita-nav-icone" aria-hidden="true">🧙</span>
+            Meu perfil
+          </button>
+        </div>
+
+        <section class="pagina pagina-esquerda" aria-label="Peça">
+          <p class="fita-titulo"><span id="codice-nome">—</span></p>
+          <p class="codice-classico" id="codice-classico"></p>
+          <div id="codice-canvas-wrap">
+            <canvas id="codice-canvas"></canvas>
+          </div>
+          <div class="toggle-grupo codice-cor-toggle" id="codice-cor" data-valor="w">
+            <button type="button" class="toggle-btn ativo" data-valor="w">
+              ♙ Bruxo
+            </button>
+            <button type="button" class="toggle-btn" data-valor="b">
+              ♟ Golem
+            </button>
+          </div>
+          <p class="codice-dica">Arraste pra girar a peça</p>
+        </section>
+
+        <section class="pagina pagina-direita" aria-label="História">
+          <p class="fita-titulo"><span>Historia</span></p>
+          <p class="codice-lore" id="codice-lore"></p>
+          <button type="button" id="codice-avanca" class="selo-iniciar">
+            Avança
           </button>
         </section>
       </div>

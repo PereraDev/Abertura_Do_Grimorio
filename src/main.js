@@ -317,6 +317,24 @@ document.getElementById("log-toggle").addEventListener("click", () => {
   logMoldura.classList.toggle("recolhido");
 });
 
+const ICONE_PAUSA =
+  '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect></svg>';
+const ICONE_RETOMAR =
+  '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M7 4l13 8-13 8V4z"></path></svg>';
+const botaoPausa = document.getElementById("botao-pausa");
+botaoPausa.addEventListener("click", () => {
+  if (!orquestrador) return;
+  if (orquestrador.pausado) {
+    orquestrador.retomar();
+    botaoPausa.innerHTML = ICONE_PAUSA;
+    botaoPausa.title = "Pausar partida";
+  } else {
+    orquestrador.pausar();
+    botaoPausa.innerHTML = ICONE_RETOMAR;
+    botaoPausa.title = "Retomar partida";
+  }
+});
+
 /* ============================================================
    Cena Three.js
    ============================================================ */
@@ -1738,12 +1756,14 @@ class TurnOrchestrator {
     // contar e a IA poderia abrir sozinha
     this.travado = true;
     this.partidaIniciada = false;
+    this.pausado = false;
     this.selecionada = null;
     this.marcadores = [];
     this.geracao = 0; // incrementado a cada reinício, invalida continuações async órfãs
     this.modo = "ia"; // "ia" (você x Stockfish) | "local" (dois jogadores no mesmo dispositivo)
     this.corHumano = "w"; // modo "ia": qual cor você controla (o resto é da IA)
     this.corJogador1 = "w"; // modo "local": qual cor é o "jogador 1", só pro rótulo do HUD
+    this.mostrarGuia = true; // pinta as casas-destino ao selecionar uma peça
     this.controleTempo = "rapido";
     const cfgTempo = CONTROLES_TEMPO[this.controleTempo];
     this.relogio = { w: cfgTempo.inicialMs, b: cfgTempo.inicialMs }; // só o valor exibido — ainda não corre
@@ -1798,6 +1818,33 @@ class TurnOrchestrator {
     this.atualizarHUD();
   }
 
+  /** Só pausável quando o tabuleiro já está esperando um clique — não
+   *  tenta cancelar a IA no meio do pensamento (ver podePausar). */
+  get podePausar() {
+    return (
+      this.partidaIniciada &&
+      !this.pausado &&
+      !this.travado &&
+      !this.perdeuPorTempo &&
+      !this.chess.isGameOver()
+    );
+  }
+
+  pausar() {
+    if (!this.podePausar) return;
+    this.pausado = true;
+    clearInterval(this._intervalRelogio);
+    this.atualizarHUD();
+  }
+
+  retomar() {
+    if (!this.pausado) return;
+    this.pausado = false;
+    this._ultimoTickRelogio = performance.now(); // não descontar o tempo pausado
+    this._intervalRelogio = setInterval(() => this._tickRelogio(), 100);
+    this.atualizarHUD();
+  }
+
   _atualizarRelogiosHUD() {
     const elW = document.getElementById("relogio-w");
     const elB = document.getElementById("relogio-b");
@@ -1810,6 +1857,12 @@ class TurnOrchestrator {
     elB.classList.toggle("relogio-ativo", emAndamento && vez === "b");
     elW.classList.toggle("relogio-baixo", this.relogio.w <= 20000);
     elB.classList.toggle("relogio-baixo", this.relogio.b <= 20000);
+    document.getElementById("tempo-w").textContent = formatarRelogio(
+      this.relogio.w,
+    );
+    document.getElementById("tempo-b").textContent = formatarRelogio(
+      this.relogio.b,
+    );
 
     // o relógio central é dinâmico: mostra o tempo de quem tem a vez agora
     elCentral.textContent = formatarRelogio(this.relogio[vez]);
@@ -1850,7 +1903,7 @@ class TurnOrchestrator {
   }
 
   get turnoHumano() {
-    if (this.travado) return false;
+    if (this.travado || this.pausado) return false;
     if (this.modo === "local") return true; // sempre um humano dos dois lados
     return this.chess.turn() === this.corHumano;
   }
@@ -1890,6 +1943,8 @@ class TurnOrchestrator {
     if (!this.partidaIniciada) {
       document.getElementById("status").textContent =
         "configure a partida e aperte Jogar";
+    } else if (this.pausado) {
+      document.getElementById("status").textContent = "Grimório selado — partida pausada.";
     } else if (this.perdeuPorTempo) {
       document.getElementById("status").textContent =
         `Tempo esgotado! ${this.perdeuPorTempo === "w" ? "Pretas" : "Brancas"} vencem.`;
@@ -1905,6 +1960,9 @@ class TurnOrchestrator {
     } else {
       document.getElementById("status").textContent = "";
     }
+    document.getElementById("botao-pausa").disabled = !(
+      this.pausado || this.podePausar
+    );
     this._atualizarPlacar();
     this._atualizarRelogiosHUD();
 
@@ -1956,10 +2014,15 @@ class TurnOrchestrator {
     casas.get(square).material = matSelecionada;
 
     // casas alcançáveis preenchidas de verde (livres) ou vermelho (captura),
-    // em vez de uma marcação flutuante — mais legível à distância
+    // em vez de uma marcação flutuante — mais legível à distância. A lista
+    // em si (this.marcadores) alimenta a validação de clique em clicarCasa()
+    // e fica sempre completa, mesmo com o guia visual desligado — só a
+    // pintura da casa é condicional, um erro de clique continua tratado igual
     const lances = this.chess.moves({ square, verbose: true });
     for (const lance of lances) {
-      casas.get(lance.to).material = lance.captured ? matCaptura : matDestino;
+      if (this.mostrarGuia) {
+        casas.get(lance.to).material = lance.captured ? matCaptura : matDestino;
+      }
       this.marcadores.push(lance.to);
     }
   }
@@ -2633,6 +2696,7 @@ ligarToggleGrupo("hub-modo-jogo", (valor) => {
 });
 ligarToggleGrupo("hub-dificuldade");
 ligarToggleGrupo("hub-cor");
+ligarToggleGrupo("hub-guia");
 
 // visual do tabuleiro: pré-visualiza na hora (o tabuleiro já está visível
 // atrás do hub, então trocar o material é feedback imediato, sem esperar "Jogar")
@@ -2661,6 +2725,8 @@ function aplicarConfigHub() {
   orquestrador.definirControleTempo(
     document.getElementById("hub-tempo-partida").value,
   );
+  orquestrador.mostrarGuia =
+    document.getElementById("hub-guia").dataset.valor === "mostrar";
 }
 
 const botaoSeloJogar = document.getElementById("hub-jogar");
@@ -2706,6 +2772,119 @@ botaoSeloJogar.addEventListener("click", async () => {
     subtitulo,
   );
   logMsg(`🪙 Sorteio da cor: ${subtitulo}`);
+});
+
+/* ============================================================
+   Códice — vitrine 3D orbitável de cada peça, com uma lore curta.
+   Reaproveita os modelos já carregados em MODELOS_ESPECIAIS (clonados,
+   nunca refeitos), numa cena/câmera própria, separada da do tabuleiro,
+   com OrbitControls livre (sem restrição de ângulo).
+   ============================================================ */
+const NOME_CLASSICO = {
+  p: "Peão",
+  n: "Cavalo",
+  b: "Bispo",
+  r: "Torre",
+  q: "Rainha",
+  k: "Rei",
+};
+const CODICE_LORE = {
+  k: "O núcleo do próprio pacto. Não é o mais forte, mas se ele cai, o ritual se quebra e tudo o mais desmorona junto — por isso toda a defesa gira em torno dele.",
+  q: "A feiticeira mais poderosa do pacto — cajado numa mão, orbe na outra, livre pra se mover em qualquer direção que a magia permitir.",
+  r: "Guardiã de pedra ancorada aos cantos do grimório. Avança em linha reta com o peso de quem nunca precisou recuar.",
+  b: "Vidente encapuzado que só enxerga ao longo das linhas diagonais do destino. Nunca muda de cor de casa — sua visão está presa a um único caminho.",
+  n: "Meio fera, meio arma arcana. Salta em curvas que nenhuma outra peça consegue prever, cruzando o tabuleiro num único bote de garras.",
+  p: "Os primeiros a jurar o pacto, em maior número e menor poder. Avançam devagar pela linha de frente, mas quem atravessa o tabuleiro inteiro é reescrito pelo grimório — e ressurge como algo maior.",
+};
+const ORDEM_CODICE = ["k", "q", "r", "b", "n", "p"];
+let codiceIndex = 0;
+
+const telaCodice = document.getElementById("tela-codice");
+const codiceCanvas = document.getElementById("codice-canvas");
+const codiceScene = new THREE.Scene();
+const codiceCamera = new THREE.PerspectiveCamera(40, 1, 0.01, 50);
+const codiceRenderer = new THREE.WebGLRenderer({
+  canvas: codiceCanvas,
+  antialias: true,
+  alpha: true,
+});
+codiceRenderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+codiceRenderer.outputColorSpace = THREE.SRGBColorSpace;
+codiceRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+codiceScene.add(new THREE.HemisphereLight(0x8a96d4, 0x2a2030, 1.3));
+const codiceDirLight = new THREE.DirectionalLight(0xffffff, 2.2);
+codiceDirLight.position.set(2, 3, 2);
+codiceScene.add(codiceDirLight);
+const codiceControls = new OrbitControls(codiceCamera, codiceRenderer.domElement);
+codiceControls.enablePan = false;
+codiceControls.minDistance = 0.2;
+codiceControls.maxDistance = 10;
+let codiceModelo = null;
+let codiceCor = "w";
+
+function redimensionarCodice() {
+  const rect = codiceCanvas.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return;
+  codiceRenderer.setSize(rect.width, rect.height, false);
+  codiceCamera.aspect = rect.width / rect.height;
+  codiceCamera.updateProjectionMatrix();
+}
+window.addEventListener("resize", () => {
+  if (!telaCodice.hidden) redimensionarCodice();
+});
+
+function mostrarPecaCodice(tipo) {
+  if (codiceModelo) codiceScene.remove(codiceModelo);
+  codiceModelo = MODELOS_ESPECIAIS[tipo][codiceCor].clone();
+  codiceScene.add(codiceModelo);
+
+  const caixa = new THREE.Box3().setFromObject(codiceModelo);
+  const centro = caixa.getCenter(new THREE.Vector3());
+  const tamanho = caixa.getSize(new THREE.Vector3());
+  codiceControls.target.copy(centro);
+  const dist = tamanho.y * 2.4;
+  codiceCamera.position.set(centro.x, centro.y + tamanho.y * 0.1, centro.z + dist);
+  codiceControls.update();
+
+  document.getElementById("codice-nome").textContent = NOME_PECA_DIAGRAMA[tipo];
+  document.getElementById("codice-classico").textContent =
+    `(${NOME_CLASSICO[tipo]})`;
+  document.getElementById("codice-lore").textContent = CODICE_LORE[tipo];
+}
+
+function animarCodice() {
+  requestAnimationFrame(animarCodice);
+  if (!telaCodice.hidden) {
+    codiceControls.update();
+    codiceRenderer.render(codiceScene, codiceCamera);
+  }
+}
+animarCodice();
+
+ligarToggleGrupo("codice-cor", (valor) => {
+  codiceCor = valor;
+  mostrarPecaCodice(ORDEM_CODICE[codiceIndex]);
+});
+
+document.getElementById("hub-nav-historia").addEventListener("click", () => {
+  hubInicial.hidden = true;
+  telaCodice.hidden = false;
+  codiceIndex = 0;
+  codiceCor = "w";
+  document
+    .querySelectorAll("#codice-cor .toggle-btn")
+    .forEach((b) => b.classList.toggle("ativo", b.dataset.valor === "w"));
+  document.getElementById("codice-cor").dataset.valor = "w";
+  redimensionarCodice();
+  mostrarPecaCodice(ORDEM_CODICE[codiceIndex]);
+});
+document.getElementById("codice-avanca").addEventListener("click", () => {
+  codiceIndex = (codiceIndex + 1) % ORDEM_CODICE.length;
+  mostrarPecaCodice(ORDEM_CODICE[codiceIndex]);
+});
+document.getElementById("codice-portal").addEventListener("click", () => {
+  telaCodice.hidden = true;
+  hubInicial.hidden = false;
 });
 
 /* ============================================================
@@ -2816,5 +2995,6 @@ async function iniciar() {
   const botaoHubJogar = document.getElementById("hub-jogar");
   botaoHubJogar.disabled = false;
   botaoHubJogar.textContent = "► Iniciar Partida";
+  document.getElementById("hub-nav-historia").disabled = false;
 }
 iniciar();

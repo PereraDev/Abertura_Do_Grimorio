@@ -290,6 +290,34 @@ body {
 .relogio-baixo .jogador-pontuacao {
   color: #ff8f78;
 }
+/* tempo restante de cada lado, sempre visível (não troca com a vez como o
+   #relogio-central) — sem isso, o relógio central pulando de um valor baixo
+   pro tempo cheio do outro lado parecia um reset em vez de "é outra pessoa" */
+.jogador-tempo {
+  position: absolute;
+  top: 90%;
+  width: 17%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  font-family: "Cinzel", "Georgia", serif;
+  font-variant-numeric: tabular-nums;
+  font-size: 10.5px;
+  font-weight: 700;
+  opacity: 0.65;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+.jogador-brancas .jogador-tempo {
+  left: 32.6%;
+  color: #ffe9ab;
+}
+.jogador-pretas .jogador-tempo {
+  left: 64%;
+  color: #bfe6ff;
+}
+.relogio-baixo .jogador-tempo {
+  opacity: 1;
+  color: #ff8f78;
+}
 /* relógio central: mostra o tempo de quem tem a vez agora, trocando de
    cor conforme o lado — dourado nas brancas, gelo nas pretas */
 #relogio-central {
@@ -468,6 +496,14 @@ select:hover {
   align-items: flex-start;
   gap: 6px;
 }
+.log-painel-botoes {
+  display: flex;
+  gap: 6px;
+}
+#botao-pausa:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
 #log-moldura {
   position: relative;
   width: min(58vw, 210px);
@@ -635,6 +671,18 @@ select:hover {
   .tela-grimorio .fita-perfil .stat b {
     font-size: 10.5px;
   }
+  .tela-grimorio .fita-nav {
+    width: 68px;
+    right: -30px;
+    font-size: 8.5px;
+  }
+  .tela-grimorio .fita-nav-esquerda {
+    left: -30px;
+    right: auto;
+  }
+  .tela-grimorio .fita-nav-icone {
+    font-size: 15px;
+  }
   .tela-grimorio .selo-iniciar {
     width: 96px;
     height: 96px;
@@ -718,6 +766,16 @@ select:hover {
   .tela-grimorio .fita-perfil .stat {
     margin-bottom: 5px;
   }
+  .tela-grimorio .fita-nav {
+    top: 30px;
+    padding-top: 24px;
+  }
+  .tela-grimorio .fita-nav-item {
+    margin-bottom: 8px;
+  }
+  #codice-canvas-wrap {
+    max-width: 150px;
+  }
   /* celular em paisagem: placar e registro em tamanho de desktop tomavam
      quase metade da tela curta, cobrindo o tabuleiro — mesmo gatilho de
      altura já usado acima pro hub, agora pro HUD do jogo em si */
@@ -742,6 +800,27 @@ select:hover {
   }
   #log div {
     padding: 2px 4px;
+  }
+  /* registro embaixo à esquerda, sob o placar (também à esquerda),
+     estourava a altura da tela e invadia o placar por cima — passa
+     pro lado direito, onde não tem mais nada ancorado */
+  #log-painel {
+    left: auto;
+    right: max(12px, env(safe-area-inset-right));
+    align-items: flex-end;
+  }
+  /* os 3 ícones (voz/ajuda/config) são fixos em 22px, posicionados por
+     % dentro do friso — no friso encolhido pra mobile (77px de altura)
+     a distância entre eles fica menor que o próprio ícone e eles se
+     sobrepõem; encolhe ícone e o svg dentro junto */
+  #hud-acoes .icone-btn {
+    width: 15px;
+    height: 15px;
+    min-width: 15px;
+  }
+  #hud-acoes .icone-btn svg {
+    width: 9px;
+    height: 9px;
   }
 }
 
@@ -1401,6 +1480,117 @@ select:hover {
   letter-spacing: 0;
   text-transform: none;
   margin-top: 1px;
+}
+/* fita de navegação — mesma pendura de couro/cera da .fita-perfil, só que
+   com botões (ícone + rótulo) em vez de estatísticas. Fica à direita por
+   padrão (tela do códice); .fita-nav-esquerda espelha pro hub, que já usa
+   o lado direito pra .fita-perfil */
+.fita-nav {
+  position: absolute;
+  top: 54px;
+  right: -58px;
+  z-index: 4;
+  width: 104px;
+  padding: 30px 8px 16px;
+  background: linear-gradient(160deg, #5c1a1a, #34100f);
+  clip-path: polygon(0 0, 100% 0, 100% 90%, 50% 100%, 0 90%);
+  box-shadow: 3px 8px 16px rgba(0, 0, 0, 0.4);
+  text-align: center;
+  color: #ecdfba;
+}
+.fita-nav::before {
+  content: "◈";
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #f0d98a, #a2823f 75%);
+  color: #4a1010;
+  font-size: 13px;
+  line-height: 22px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+.fita-nav-esquerda {
+  right: auto;
+  left: -58px;
+}
+.fita-nav-item {
+  display: block;
+  width: 100%;
+  margin-bottom: 16px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: inherit;
+  font-family: "Cinzel", "Georgia", serif;
+  font-size: 10.5px;
+  letter-spacing: 0.3px;
+  line-height: 1.3;
+  cursor: pointer;
+  opacity: 0.92;
+  transition: opacity 0.15s;
+}
+.fita-nav-item:last-child {
+  margin-bottom: 0;
+}
+.fita-nav-item:hover:not(:disabled) {
+  opacity: 1;
+  color: #f0d98a;
+}
+.fita-nav-item:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.fita-nav-icone {
+  display: block;
+  font-size: 19px;
+  margin-bottom: 4px;
+}
+/* ---- tela do códice: viewer 3D orbitável da peça + lore ---- */
+.codice-classico {
+  margin: -14px 0 0;
+  text-align: center;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--tinta-apagada);
+}
+#codice-canvas-wrap {
+  width: 100%;
+  max-width: 260px;
+  aspect-ratio: 1;
+  margin: 10px auto 0;
+  cursor: grab;
+}
+#codice-canvas-wrap:active {
+  cursor: grabbing;
+}
+#codice-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+.codice-cor-toggle {
+  justify-content: center;
+  gap: 22px;
+  margin-top: 8px;
+}
+.codice-dica {
+  margin: 6px 0 0;
+  text-align: center;
+  font-size: 11px;
+  color: var(--tinta-apagada);
+  opacity: 0.8;
+}
+.codice-lore {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--tinta-clara);
+  margin: 0 0 20px;
+  min-height: 3em;
 }
 /* overlay de bloqueio por orientação: capa fechada + convite a girar o aparelho */
 .grimorio-bloqueio {
