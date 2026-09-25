@@ -1678,6 +1678,13 @@ select:hover {
   border-radius: 8px;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
 }
+/* sem isso, o display:flex acima vale mais que o display:none nativo do
+   atributo [hidden] — o menu nunca ficava realmente invisível, só o
+   atributo mudava (era por isso que nada resolvia: o bug nunca foi
+   foco nem hover, era isso desde o início) */
+.pf-retrato-menu[hidden] {
+  display: none;
+}
 .pf-retrato-menu button {
   padding: 7px 10px;
   background: none;
