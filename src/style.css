@@ -1299,6 +1299,12 @@ select:hover {
   flex-direction: column;
   height: 100%;
 }
+/* mesmo problema do menu do retrato: display:flex vence o display:none
+   nativo do [hidden] — sem isso, login/criar/recuperar ficam todos
+   visíveis ao mesmo tempo, empilhados */
+.pacto-form[hidden] {
+  display: none;
+}
 .campo-pacto {
   display: block;
   margin-bottom: 22px;
