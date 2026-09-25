@@ -1133,6 +1133,10 @@ select:hover {
   font-family: "Crimson Text", "EB Garamond", "Georgia", serif;
   font-size: 15.5px;
   color: var(--tinta);
+  /* o <select> fechado fica transparente (a própria página já tem a cor
+     do pergaminho por trás); mas o menu ABERTO é desenhado pelo navegador
+     com fundo branco por padrão — sem isso aqui, as opções não herdam
+     nada do tema e ficam brancas mesmo com o select transparente */
   background: transparent;
   border: none;
   border-bottom: 1px solid rgba(52, 40, 26, 0.4);
@@ -1154,6 +1158,10 @@ select:hover {
 .tela-grimorio select:focus {
   border-bottom-color: var(--brilho-roxo);
   outline: none;
+}
+.tela-grimorio select option {
+  background-color: var(--pergaminho);
+  color: var(--tinta);
 }
 /* selo de cera / círculo alquímico: botão "Iniciar Partida", redondo,
    com animação de prensa (0.4s) antes de seguir o fluxo normal */
@@ -1434,14 +1442,21 @@ select:hover {
 .hub-limpar-link:hover {
   color: var(--tinta);
 }
-/* fita do perfil, pendurada na lateral direita como um marcador de página */
+/* fita do perfil, pendurada na lateral direita como um marcador de página.
+   -80px (não -58px) porque a garota-dragão (.mascote-dragao, right:34px)
+   fica bem no canto — precisa desse tanto de fora pra não cruzar com ela;
+   mesmo valor usado em .fita-nav/.fita-nav-esquerda, pro par ficar simétrico */
 .fita-perfil {
   position: absolute;
   top: 54px;
-  right: -58px;
+  right: -80px;
   z-index: 4;
   width: 104px;
+  min-height: 210px;
   padding: 30px 8px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   background: linear-gradient(160deg, #5c1a1a, #34100f);
   clip-path: polygon(0 0, 100% 0, 100% 90%, 50% 100%, 0 90%);
   box-shadow: 3px 8px 16px rgba(0, 0, 0, 0.4);
@@ -1488,10 +1503,14 @@ select:hover {
 .fita-nav {
   position: absolute;
   top: 54px;
-  right: -58px;
+  right: -80px;
   z-index: 4;
   width: 104px;
+  min-height: 210px;
   padding: 30px 8px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   background: linear-gradient(160deg, #5c1a1a, #34100f);
   clip-path: polygon(0 0, 100% 0, 100% 90%, 50% 100%, 0 90%);
   box-shadow: 3px 8px 16px rgba(0, 0, 0, 0.4);
@@ -1515,7 +1534,7 @@ select:hover {
 }
 .fita-nav-esquerda {
   right: auto;
-  left: -58px;
+  left: -80px; /* espelho exato de .fita-perfil/.fita-nav (right: -80px) */
 }
 .fita-nav-item {
   display: block;
@@ -1591,6 +1610,128 @@ select:hover {
   color: var(--tinta-clara);
   margin: 0 0 20px;
   min-height: 3em;
+}
+/* ---- tela de perfil: retrato + lista de feitos/estatísticas ---- */
+.pf-retrato-wrap {
+  position: relative;
+  width: 70%;
+  max-width: 220px;
+  margin: 10px auto 0;
+}
+.pf-retrato-moldura {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 3px solid rgba(155, 107, 242, 0.5);
+  box-shadow:
+    0 0 0 6px rgba(217, 195, 122, 0.15),
+    0 8px 20px rgba(0, 0, 0, 0.4);
+  /* placeholder até o retrato de verdade entrar — evita o "ícone quebrado" */
+  background: radial-gradient(circle at 35% 30%, #3a2c50, #14101e 75%);
+  overflow: hidden;
+}
+/* botão de câmera preso no canto do retrato — abre um menuzinho com
+   "trocar foto"/"visualizar imagem" em vez de agir direto no clique,
+   já que os dois disparam ações bem diferentes (arquivo vs. nova aba) */
+.pf-retrato-editar {
+  position: absolute;
+  right: 4%;
+  bottom: 4%;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 2px solid var(--pergaminho);
+  background: var(--tinta);
+  color: var(--pergaminho);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+.pf-retrato-editar svg {
+  width: 15px;
+  height: 15px;
+}
+/* nada de :hover/:active/:focus mudando o fundo — em algum navegador esse
+   estado ficava preso roxo depois do clique e não soltava mais. O menu
+   abrindo já é o feedback do clique, não precisa de mais nada aqui */
+.pf-retrato-editar,
+.pf-retrato-editar:hover,
+.pf-retrato-editar:active,
+.pf-retrato-editar:focus {
+  background: var(--tinta);
+  outline: none;
+}
+.pf-retrato-menu {
+  position: absolute;
+  z-index: 6;
+  right: 0;
+  bottom: -8px;
+  transform: translateY(100%);
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  padding: 6px;
+  background: var(--pergaminho);
+  border: 1px solid rgba(52, 40, 26, 0.4);
+  border-radius: 8px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+.pf-retrato-menu button {
+  padding: 7px 10px;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  text-align: left;
+  font-family: "Crimson Text", "EB Garamond", "Georgia", serif;
+  font-size: 14px;
+  color: var(--tinta);
+  cursor: pointer;
+}
+.pf-retrato-menu button:hover {
+  background: rgba(109, 63, 201, 0.15);
+}
+.pf-retrato-moldura img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.pf-identidade-rotulo {
+  margin: 14px 0 0;
+  text-align: center;
+  font-family: "Cinzel", "Georgia", serif;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--tinta-apagada);
+}
+.pf-nome {
+  margin: 2px 0 0;
+  text-align: center;
+  font-family: "Cinzel", "Georgia", serif;
+  font-size: 20px;
+  color: var(--tinta);
+}
+.pf-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(52, 40, 26, 0.25);
+  font-size: 14px;
+}
+.pf-stat-rotulo {
+  color: var(--tinta-clara);
+}
+.pf-stat-valor {
+  flex-shrink: 0;
+  font-family: "Cinzel", "Georgia", serif;
+  font-weight: 700;
+  text-align: right;
+  color: var(--tinta);
 }
 /* overlay de bloqueio por orientação: capa fechada + convite a girar o aparelho */
 .grimorio-bloqueio {

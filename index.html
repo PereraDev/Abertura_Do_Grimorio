@@ -185,7 +185,7 @@
         <section class="pagina pagina-direita" aria-label="Assinar o pacto">
           <p class="fita-titulo"><span>Assinatura</span></p>
 
-          <form id="form-pacto" class="pacto-form" novalidate>
+          <form id="pacto-view-login" class="pacto-form" novalidate>
             <label class="campo-pacto">
               <span class="campo-rotulo">1. Nome de Conjurador</span>
               <span class="campo-pacto-linha">
@@ -224,6 +224,98 @@
               </button>
               <button type="button" id="pacto-esqueci-senha" class="hub-limpar-link">
                 Esqueci a Senha
+              </button>
+            </div>
+          </form>
+
+          <form id="pacto-view-criar" class="pacto-form" novalidate hidden>
+            <label class="campo-pacto">
+              <span class="campo-rotulo">1. Nome de Conjurador</span>
+              <span class="campo-pacto-linha">
+                <span class="campo-pacto-icone" aria-hidden="true">ᛝ</span>
+                <input type="text" id="criar-nome" autocomplete="username" required />
+              </span>
+            </label>
+
+            <label class="campo-pacto">
+              <span class="campo-rotulo">2. Palavra-Passe</span>
+              <span class="campo-pacto-linha">
+                <span class="campo-pacto-icone" aria-hidden="true">ᛟ</span>
+                <input
+                  type="password"
+                  id="criar-senha"
+                  autocomplete="new-password"
+                  required
+                />
+              </span>
+            </label>
+
+            <label class="campo-pacto">
+              <span class="campo-rotulo">3. Confirmar Palavra-Passe</span>
+              <span class="campo-pacto-linha">
+                <span class="campo-pacto-icone" aria-hidden="true">ᛟ</span>
+                <input
+                  type="password"
+                  id="criar-senha-confirma"
+                  autocomplete="new-password"
+                  required
+                />
+              </span>
+            </label>
+
+            <p id="criar-erro" class="pacto-erro" role="alert" hidden></p>
+
+            <button type="submit" class="selo-iniciar">Criar Pacto</button>
+
+            <div class="pacto-links">
+              <button type="button" id="criar-voltar" class="hub-limpar-link">
+                Já tenho um pacto
+              </button>
+            </div>
+          </form>
+
+          <form id="pacto-view-recuperar" class="pacto-form" novalidate hidden>
+            <label class="campo-pacto">
+              <span class="campo-rotulo">1. Nome de Conjurador</span>
+              <span class="campo-pacto-linha">
+                <span class="campo-pacto-icone" aria-hidden="true">ᛝ</span>
+                <input type="text" id="recuperar-nome" autocomplete="username" required />
+              </span>
+            </label>
+
+            <label class="campo-pacto">
+              <span class="campo-rotulo">2. Nova Palavra-Passe</span>
+              <span class="campo-pacto-linha">
+                <span class="campo-pacto-icone" aria-hidden="true">ᛟ</span>
+                <input
+                  type="password"
+                  id="recuperar-senha"
+                  autocomplete="new-password"
+                  required
+                />
+              </span>
+            </label>
+
+            <label class="campo-pacto">
+              <span class="campo-rotulo">3. Confirmar Palavra-Passe</span>
+              <span class="campo-pacto-linha">
+                <span class="campo-pacto-icone" aria-hidden="true">ᛟ</span>
+                <input
+                  type="password"
+                  id="recuperar-senha-confirma"
+                  autocomplete="new-password"
+                  required
+                />
+              </span>
+            </label>
+
+            <p id="recuperar-erro" class="pacto-erro" role="alert" hidden></p>
+
+            <button type="submit" class="selo-iniciar">Redefinir</button>
+
+            <div class="pacto-links">
+              <button type="button" id="recuperar-voltar" class="hub-limpar-link">
+                Já tenho um pacto
               </button>
             </div>
           </form>
@@ -276,8 +368,6 @@
             type="button"
             id="hub-nav-perfil"
             class="fita-nav-item"
-            disabled
-            title="Em breve"
           >
             <span class="fita-nav-icone" aria-hidden="true">🧙</span>
             Meu perfil
@@ -441,8 +531,6 @@
             type="button"
             id="codice-perfil"
             class="fita-nav-item"
-            disabled
-            title="Em breve"
           >
             <span class="fita-nav-icone" aria-hidden="true">🧙</span>
             Meu perfil
@@ -472,6 +560,115 @@
           <button type="button" id="codice-avanca" class="selo-iniciar">
             Avança
           </button>
+        </section>
+      </div>
+
+      <div class="grimorio-bloqueio" aria-hidden="true">
+        <div class="capa-fechada">⚡</div>
+        <p class="mensagem-girar">
+          Gire o seu artefato para destrancar o Grimório
+        </p>
+      </div>
+    </div>
+
+    <div id="tela-perfil" class="tela-grimorio modal-overlay" hidden>
+      <div class="grimorio">
+        <img
+          class="mascote mascote-coruja"
+          src="/assets/hub/coruja.webp"
+          alt=""
+          aria-hidden="true"
+        />
+        <img
+          class="mascote mascote-dragao"
+          src="/assets/hub/dragao.webp"
+          alt=""
+          aria-hidden="true"
+        />
+        <div class="lombada" aria-hidden="true"></div>
+        <h1 class="hub-titulo">Abertura do Grimório</h1>
+
+        <div class="fita-nav" aria-label="Navegação do grimório">
+          <button type="button" id="pf-voltar" class="fita-nav-item">
+            <span class="fita-nav-icone" aria-hidden="true">💠</span>
+            Voltar
+          </button>
+          <button type="button" id="pf-codice" class="fita-nav-item">
+            <span class="fita-nav-icone" aria-hidden="true">📜</span>
+            Códice
+          </button>
+        </div>
+
+        <section class="pagina pagina-esquerda" aria-label="Identidade arcana">
+          <div class="pf-retrato-wrap">
+            <div class="pf-retrato-moldura">
+              <img id="pf-retrato" src="/assets/hub/retrato-arcano.webp" alt="" />
+            </div>
+            <button
+              type="button"
+              id="pf-retrato-btn"
+              class="pf-retrato-editar"
+              title="Opções do retrato"
+              aria-haspopup="true"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M12 20h9"></path>
+                <path
+                  d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"
+                ></path>
+              </svg>
+            </button>
+            <div id="pf-retrato-menu" class="pf-retrato-menu" hidden>
+              <button type="button" id="pf-retrato-trocar">Trocar foto</button>
+              <button type="button" id="pf-retrato-ver">Visualizar imagem</button>
+            </div>
+          </div>
+          <input type="file" id="pf-retrato-input" accept="image/*" hidden />
+          <p class="pf-identidade-rotulo">Identidade Arcana</p>
+          <p class="pf-nome" id="pf-nome">—</p>
+        </section>
+
+        <section class="pagina pagina-direita" aria-label="Feitos e estatísticas">
+          <p class="fita-titulo"><span>Feitos e Estatísticas</span></p>
+          <div class="pf-stat">
+            <span class="pf-stat-rotulo">Rituais vencidos</span>
+            <span class="pf-stat-valor" id="pf-rituais"></span>
+          </div>
+          <div class="pf-stat">
+            <span class="pf-stat-rotulo">Páginas destruídas</span>
+            <span class="pf-stat-valor" id="pf-paginas"></span>
+          </div>
+          <div class="pf-stat">
+            <span class="pf-stat-rotulo">Selo quebrado</span>
+            <span class="pf-stat-valor" id="pf-selo"></span>
+          </div>
+          <div class="pf-stat">
+            <span class="pf-stat-rotulo">Conjuração favorita</span>
+            <span class="pf-stat-valor" id="pf-conjuracao"></span>
+          </div>
+          <div class="pf-stat">
+            <span class="pf-stat-rotulo">Tempo conjurando</span>
+            <span class="pf-stat-valor" id="pf-tempo"></span>
+          </div>
+          <div class="pf-stat">
+            <span class="pf-stat-rotulo">Elo Rúnico</span>
+            <span class="pf-stat-valor" id="pf-elo"></span>
+          </div>
+          <div class="pf-stat">
+            <span class="pf-stat-rotulo">Recorde de Fratura</span>
+            <span class="pf-stat-valor" id="pf-fratura"></span>
+          </div>
+          <p class="page-kicker-hub" style="margin-top: 14px">
+            Histórico Recente
+          </p>
+          <ol id="pf-historico" class="indice-recentes"></ol>
         </section>
       </div>
 

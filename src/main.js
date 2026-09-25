@@ -1757,6 +1757,7 @@ class TurnOrchestrator {
     this.travado = true;
     this.partidaIniciada = false;
     this.pausado = false;
+    this.iniciadaEm = 0;
     this.selecionada = null;
     this.marcadores = [];
     this.geracao = 0; // incrementado a cada reinício, invalida continuações async órfãs
@@ -1780,6 +1781,7 @@ class TurnOrchestrator {
     this.partidaIniciada = true;
     this.travado = false;
     this.resultadoRegistrado = false;
+    this.iniciadaEm = performance.now(); // duração da partida, pro perfil
     this._iniciarRelogios();
     this.atualizarHUD();
     this._jogarPrimeiroLanceIASeNecessario();
@@ -2084,6 +2086,7 @@ class TurnOrchestrator {
     if (lance.captured) this.pontos[lance.color] += PONTOS_PECA[lance.captured];
     this.relogio[lance.color] +=
       CONTROLES_TEMPO[this.controleTempo].incrementoMs;
+    registrarLancePecaEstatistica(lance.piece);
 
     this.travado = true;
     this.atualizarHUD();
@@ -2147,6 +2150,7 @@ class TurnOrchestrator {
     if (lance.captured) this.pontos[lance.color] += PONTOS_PECA[lance.captured];
     this.relogio[lance.color] +=
       CONTROLES_TEMPO[this.controleTempo].incrementoMs;
+    registrarLancePecaEstatistica(lance.piece);
     logMsg(`IA: ${descreverLance(lance)}`);
     await this.executarMovimento3D(lance, geracao); // 2-7
     if (geracao !== this.geracao) return; // partida foi reiniciada durante a animação
@@ -2415,13 +2419,41 @@ document.getElementById("reiniciar").addEventListener("click", () => {
 });
 
 /* ============================================================
-   Tela do pacto (login) — porta de entrada antes do hub. Não há conta
-   real nem servidor: só valida que os campos foram preenchidos e guarda
-   o nome de conjurador localmente, como o resto do progresso do jogo.
+   Tela do pacto (login) — porta de entrada antes do hub. Não há servidor:
+   "contas" são só uma lista de {nome, senha} em localStorage, sem hash
+   nem qualquer segurança real — o suficiente pra separar progresso entre
+   conjuradores no mesmo aparelho, não pra proteger nada de verdade.
    ============================================================ */
+const CHAVE_CONTAS = "xadrezBruxos.contas";
+
+function lerContas() {
+  try {
+    const bruto = localStorage.getItem(CHAVE_CONTAS);
+    const lista = bruto ? JSON.parse(bruto) : [];
+    return Array.isArray(lista) ? lista : [];
+  } catch {
+    return []; // JSON corrompido ou localStorage indisponível — recomeça vazio
+  }
+}
+function gravarContas(lista) {
+  try {
+    localStorage.setItem(CHAVE_CONTAS, JSON.stringify(lista));
+  } catch {
+    // modo privado / quota excedida — segue sem persistir
+  }
+}
+function encontrarConta(nome) {
+  const chave = nome.trim().toLowerCase();
+  return lerContas().find((c) => c.nome.toLowerCase() === chave) ?? null;
+}
+
 const telaPacto = document.getElementById("tela-pacto");
-const formPacto = document.getElementById("form-pacto");
-const pactoErro = document.getElementById("pacto-erro");
+const viewLogin = document.getElementById("pacto-view-login");
+const viewCriar = document.getElementById("pacto-view-criar");
+const viewRecuperar = document.getElementById("pacto-view-recuperar");
+const erroLogin = document.getElementById("pacto-erro");
+const erroCriar = document.getElementById("criar-erro");
+const erroRecuperar = document.getElementById("recuperar-erro");
 // o selo do pacto e o selo "Iniciar Partida" ocupam a mesma posição na tela;
 // um clique segurado que começa no selo do pacto e solta já em cima do selo
 // do hub (ou um clique duplo residual) dispara o botão do hub sem o usuário
@@ -2431,21 +2463,44 @@ const pactoErro = document.getElementById("pacto-erro");
 // pointer-events temporário, que só bloqueia mouse.
 let hubReveladoEm = 0;
 
-function mostrarNotaPacto(texto) {
-  pactoErro.textContent = texto;
-  pactoErro.hidden = false;
+function mostrarErroPacto(el, texto) {
+  el.textContent = texto;
+  el.hidden = false;
 }
 
-formPacto.addEventListener("submit", async (evento) => {
+/** Troca entre as 3 páginas do pacto (login/criar/recuperar) — todas
+ *  ocupam o mesmo espaço na página direita, só uma visível por vez. */
+function trocarViewPacto(view) {
+  viewLogin.hidden = view !== "login";
+  viewCriar.hidden = view !== "criar";
+  viewRecuperar.hidden = view !== "recuperar";
+  erroLogin.hidden = true;
+  erroCriar.hidden = true;
+  erroRecuperar.hidden = true;
+}
+
+viewLogin.addEventListener("submit", async (evento) => {
   evento.preventDefault();
   const nome = document.getElementById("pacto-nome").value.trim();
   const senha = document.getElementById("pacto-senha").value;
   if (!nome || !senha) {
-    mostrarNotaPacto("Preencha o nome de conjurador e a palavra-passe.");
+    mostrarErroPacto(erroLogin, "Preencha o nome de conjurador e a palavra-passe.");
     return;
   }
-  pactoErro.hidden = true;
-  localStorage.setItem("xadrezBruxos.nomeConjurador", nome);
+  const conta = encontrarConta(nome);
+  if (!conta) {
+    mostrarErroPacto(
+      erroLogin,
+      "Nenhum pacto encontrado com esse nome. Crie um pacto primeiro.",
+    );
+    return;
+  }
+  if (conta.senha !== senha) {
+    mostrarErroPacto(erroLogin, "Palavra-passe incorreta.");
+    return;
+  }
+  erroLogin.hidden = true;
+  localStorage.setItem("xadrezBruxos.nomeConjurador", conta.nome);
 
   // reaproveita a mesma dissolução (encolhe + desfoca + selo em flash)
   // que o hub usa pra mergulhar no tabuleiro — mesma linguagem visual
@@ -2456,18 +2511,73 @@ formPacto.addEventListener("submit", async (evento) => {
   hubReveladoEm = performance.now();
 });
 
-document.getElementById("pacto-criar-conta").addEventListener("click", () => {
-  mostrarNotaPacto(
-    "Em breve — por ora o Grimório guarda seu progresso só neste dispositivo.",
-  );
-});
+document
+  .getElementById("pacto-criar-conta")
+  .addEventListener("click", () => trocarViewPacto("criar"));
 document
   .getElementById("pacto-esqueci-senha")
-  .addEventListener("click", () => {
-    mostrarNotaPacto(
-      "Em breve — por ora o Grimório guarda seu progresso só neste dispositivo.",
-    );
-  });
+  .addEventListener("click", () => trocarViewPacto("recuperar"));
+document
+  .getElementById("criar-voltar")
+  .addEventListener("click", () => trocarViewPacto("login"));
+document
+  .getElementById("recuperar-voltar")
+  .addEventListener("click", () => trocarViewPacto("login"));
+
+viewCriar.addEventListener("submit", (evento) => {
+  evento.preventDefault();
+  const nome = document.getElementById("criar-nome").value.trim();
+  const senha = document.getElementById("criar-senha").value;
+  const confirma = document.getElementById("criar-senha-confirma").value;
+  if (!nome || !senha || !confirma) {
+    mostrarErroPacto(erroCriar, "Preencha todos os campos.");
+    return;
+  }
+  if (senha !== confirma) {
+    mostrarErroPacto(erroCriar, "As palavras-passe não coincidem.");
+    return;
+  }
+  if (encontrarConta(nome)) {
+    mostrarErroPacto(erroCriar, "Já existe um pacto com esse nome.");
+    return;
+  }
+  const contas = lerContas();
+  contas.push({ nome, senha });
+  gravarContas(contas);
+
+  document.getElementById("pacto-nome").value = nome;
+  document.getElementById("pacto-senha").value = "";
+  trocarViewPacto("login");
+  mostrarErroPacto(erroLogin, "Pacto criado! Assine abaixo pra entrar.");
+});
+
+viewRecuperar.addEventListener("submit", (evento) => {
+  evento.preventDefault();
+  const nome = document.getElementById("recuperar-nome").value.trim();
+  const senha = document.getElementById("recuperar-senha").value;
+  const confirma = document.getElementById("recuperar-senha-confirma").value;
+  if (!nome || !senha || !confirma) {
+    mostrarErroPacto(erroRecuperar, "Preencha todos os campos.");
+    return;
+  }
+  if (senha !== confirma) {
+    mostrarErroPacto(erroRecuperar, "As palavras-passe não coincidem.");
+    return;
+  }
+  const contas = lerContas();
+  const conta = contas.find((c) => c.nome.toLowerCase() === nome.toLowerCase());
+  if (!conta) {
+    mostrarErroPacto(erroRecuperar, "Nenhum pacto encontrado com esse nome.");
+    return;
+  }
+  conta.senha = senha;
+  gravarContas(contas);
+
+  document.getElementById("pacto-nome").value = conta.nome;
+  document.getElementById("pacto-senha").value = "";
+  trocarViewPacto("login");
+  mostrarErroPacto(erroLogin, "Palavra-passe redefinida! Assine abaixo pra entrar.");
+});
 
 /* ============================================================
    Hub inicial — tela de configuração antes da primeira partida.
@@ -2500,6 +2610,37 @@ const ELO_IA_POR_DIFICULDADE = {
   intermediario: 1400,
   "bruxo-mestre": 2200,
 };
+
+const CHAVE_ESTATISTICAS = "xadrezBruxos.estatisticas";
+
+/** Estatísticas vitalícias (independem de reiniciar/trocar de partida):
+ *  quantas vezes cada tipo de peça se moveu e tempo total jogado. */
+function lerEstatisticas() {
+  try {
+    const bruto = localStorage.getItem(CHAVE_ESTATISTICAS);
+    const dados = bruto ? JSON.parse(bruto) : null;
+    return {
+      contagemPecas: { p: 0, n: 0, b: 0, r: 0, q: 0, k: 0, ...dados?.contagemPecas },
+      tempoTotalMs: dados?.tempoTotalMs || 0,
+    };
+  } catch {
+    return { contagemPecas: { p: 0, n: 0, b: 0, r: 0, q: 0, k: 0 }, tempoTotalMs: 0 };
+  }
+}
+
+function gravarEstatisticas(estatisticas) {
+  try {
+    localStorage.setItem(CHAVE_ESTATISTICAS, JSON.stringify(estatisticas));
+  } catch {
+    // modo privado / quota excedida — segue sem persistir
+  }
+}
+
+function registrarLancePecaEstatistica(tipo) {
+  const estatisticas = lerEstatisticas();
+  estatisticas.contagemPecas[tipo] = (estatisticas.contagemPecas[tipo] || 0) + 1;
+  gravarEstatisticas(estatisticas);
+}
 
 function lerHistoricoHub() {
   try {
@@ -2567,9 +2708,17 @@ function registrarResultadoHub(orq) {
       pontos,
     };
   }
+  entrada.mate = orq.chess.isCheckmate();
+  entrada.numeroLances = orq.chess.history().length;
   const historico = lerHistoricoHub();
   historico.unshift(entrada);
   gravarHistoricoHub(historico);
+
+  const estatisticas = lerEstatisticas();
+  estatisticas.tempoTotalMs += orq.iniciadaEm
+    ? performance.now() - orq.iniciadaEm
+    : 0;
+  gravarEstatisticas(estatisticas);
 }
 
 function formatarDataHub(iso) {
@@ -2577,6 +2726,26 @@ function formatarDataHub(iso) {
     day: "2-digit",
     month: "short",
   });
+}
+
+/** Uma linha de histórico ("Vitória — Contra a IA · Mestre · 24 set"), reaproveitada
+ *  no índice de líderes do hub e no histórico recente da tela de perfil. */
+function rotuloEntradaHistorico(e) {
+  const rotuloResultado =
+    e.modo === "local"
+      ? e.resultado === "empate"
+        ? "Empate"
+        : `Vitória das ${e.corVencedora === "w" ? "Brancas" : "Pretas"}`
+      : e.resultado === "vitoria"
+        ? "Vitória"
+        : e.resultado === "derrota"
+          ? "Derrota"
+          : "Empate";
+  const rotuloModo =
+    e.modo === "local"
+      ? "Duelo Local"
+      : `Contra a IA · ${NOME_DIFICULDADE_HUB[e.dificuldade] ?? ""}`;
+  return `${rotuloResultado} — ${rotuloModo} · ${formatarDataHub(e.data)}`;
 }
 
 /** Uma linha do índice de líderes: rank + nome + pontuação, com leader pontilhado. */
@@ -2617,23 +2786,7 @@ function renderizarPlacarHub() {
       '<li class="indice-vazio">Nenhuma partida registada ainda.</li>';
   } else {
     recentesEl.innerHTML = recentes
-      .map((e) => {
-        const rotuloResultado =
-          e.modo === "local"
-            ? e.resultado === "empate"
-              ? "Empate"
-              : `Vitória das ${e.corVencedora === "w" ? "Brancas" : "Pretas"}`
-            : e.resultado === "vitoria"
-              ? "Vitória"
-              : e.resultado === "derrota"
-                ? "Derrota"
-                : "Empate";
-        const rotuloModo =
-          e.modo === "local"
-            ? "Duelo Local"
-            : `Contra a IA · ${NOME_DIFICULDADE_HUB[e.dificuldade] ?? ""}`;
-        return `<li>${rotuloResultado} — ${rotuloModo} · ${formatarDataHub(e.data)}</li>`;
-      })
+      .map((e) => `<li>${rotuloEntradaHistorico(e)}</li>`)
       .join("");
   }
 
@@ -2659,6 +2812,62 @@ function renderizarPerfilHub(historico) {
   document.getElementById("perfil-derrotas").textContent = derrotas;
   document.getElementById("perfil-elo").textContent =
     calcularEloJogador(historico);
+}
+
+function formatarDuracao(ms) {
+  const horas = Math.floor(ms / 3_600_000);
+  const minutos = Math.floor((ms % 3_600_000) / 60_000);
+  if (horas === 0 && minutos === 0) return "—";
+  return horas > 0 ? `${horas}h ${minutos}min` : `${minutos}min`;
+}
+
+/** Tela "Meu perfil": estatísticas vitalícias, tudo derivado do histórico
+ *  do hub + do contador de lances por tipo de peça (ver registrarLancePecaEstatistica). */
+function renderizarTelaPerfil() {
+  const historico = lerHistoricoHub();
+  const estatisticas = lerEstatisticas();
+  const vitoriasPorMate = historico.filter(
+    (e) => e.resultado === "vitoria" && e.mate,
+  );
+
+  const nome = localStorage.getItem("xadrezBruxos.nomeConjurador");
+  document.getElementById("pf-nome").textContent = nome || "Conjurador Desconhecido";
+
+  const retratoCustom = localStorage.getItem("xadrezBruxos.retratoCustom");
+  if (retratoCustom) document.getElementById("pf-retrato").src = retratoCustom;
+
+  document.getElementById("pf-rituais").textContent = historico.filter(
+    (e) => e.resultado === "vitoria",
+  ).length;
+  document.getElementById("pf-paginas").textContent = historico.filter(
+    (e) => e.resultado === "derrota",
+  ).length;
+  document.getElementById("pf-selo").textContent = vitoriasPorMate.length;
+  document.getElementById("pf-elo").textContent = calcularEloJogador(historico);
+  document.getElementById("pf-tempo").textContent = formatarDuracao(
+    estatisticas.tempoTotalMs,
+  );
+
+  const [tipoFavorito] = Object.entries(estatisticas.contagemPecas).sort(
+    (a, b) => b[1] - a[1],
+  )[0];
+  document.getElementById("pf-conjuracao").textContent =
+    estatisticas.contagemPecas[tipoFavorito] > 0
+      ? `${NOME_PECA_DIAGRAMA[tipoFavorito]} (${NOME_CLASSICO[tipoFavorito]})`
+      : "—";
+
+  const fratura = vitoriasPorMate.length
+    ? Math.min(...vitoriasPorMate.map((e) => e.numeroLances))
+    : null;
+  document.getElementById("pf-fratura").textContent = fratura
+    ? `${fratura} lances`
+    : "—";
+
+  const historicoEl = document.getElementById("pf-historico");
+  const recentes = historico.slice(0, 5);
+  historicoEl.innerHTML = recentes.length
+    ? recentes.map((e) => `<li>${rotuloEntradaHistorico(e)}</li>`).join("")
+    : '<li class="indice-vazio">Nenhuma partida registada ainda.</li>';
 }
 
 renderizarPlacarHub();
@@ -2800,6 +3009,7 @@ const ORDEM_CODICE = ["k", "q", "r", "b", "n", "p"];
 let codiceIndex = 0;
 
 const telaCodice = document.getElementById("tela-codice");
+const telaPerfil = document.getElementById("tela-perfil");
 const codiceCanvas = document.getElementById("codice-canvas");
 const codiceScene = new THREE.Scene();
 const codiceCamera = new THREE.PerspectiveCamera(40, 1, 0.01, 50);
@@ -2866,8 +3076,8 @@ ligarToggleGrupo("codice-cor", (valor) => {
   mostrarPecaCodice(ORDEM_CODICE[codiceIndex]);
 });
 
-document.getElementById("hub-nav-historia").addEventListener("click", () => {
-  hubInicial.hidden = true;
+function abrirCodice(telaOrigem) {
+  telaOrigem.hidden = true;
   telaCodice.hidden = false;
   codiceIndex = 0;
   codiceCor = "w";
@@ -2877,7 +3087,16 @@ document.getElementById("hub-nav-historia").addEventListener("click", () => {
   document.getElementById("codice-cor").dataset.valor = "w";
   redimensionarCodice();
   mostrarPecaCodice(ORDEM_CODICE[codiceIndex]);
-});
+}
+function abrirPerfil(telaOrigem) {
+  telaOrigem.hidden = true;
+  telaPerfil.hidden = false;
+  renderizarTelaPerfil();
+}
+
+document
+  .getElementById("hub-nav-historia")
+  .addEventListener("click", () => abrirCodice(hubInicial));
 document.getElementById("codice-avanca").addEventListener("click", () => {
   codiceIndex = (codiceIndex + 1) % ORDEM_CODICE.length;
   mostrarPecaCodice(ORDEM_CODICE[codiceIndex]);
@@ -2885,6 +3104,88 @@ document.getElementById("codice-avanca").addEventListener("click", () => {
 document.getElementById("codice-portal").addEventListener("click", () => {
   telaCodice.hidden = true;
   hubInicial.hidden = false;
+});
+
+document
+  .getElementById("hub-nav-perfil")
+  .addEventListener("click", () => abrirPerfil(hubInicial));
+document
+  .getElementById("codice-perfil")
+  .addEventListener("click", () => abrirPerfil(telaCodice));
+document.getElementById("pf-voltar").addEventListener("click", () => {
+  telaPerfil.hidden = true;
+  hubInicial.hidden = false;
+});
+document
+  .getElementById("pf-codice")
+  .addEventListener("click", () => abrirCodice(telaPerfil));
+
+/* botão de câmera no retrato: menuzinho com "trocar foto" (upload local,
+   recortado/reduzido em canvas antes de ir pro localStorage) e "visualizar
+   imagem" (abre em nova aba) — sem servidor, a foto nunca sai do aparelho */
+const pfRetratoBtn = document.getElementById("pf-retrato-btn");
+const pfRetratoMenu = document.getElementById("pf-retrato-menu");
+const pfRetratoInput = document.getElementById("pf-retrato-input");
+
+pfRetratoBtn.addEventListener("click", () => {
+  pfRetratoMenu.hidden = !pfRetratoMenu.hidden;
+});
+// fecha ao tocar/clicar fora — checagem explícita do alvo em vez de
+// stopPropagation: em touch (Safari em especial), um toque num elemento
+// sem handler próprio às vezes não borbulha um "click" até o document,
+// então o listener de "fechar" nunca disparava. pointerdown + contains()
+// não depende de bolhagem de evento em outros elementos pra funcionar.
+document.addEventListener("pointerdown", (evento) => {
+  if (pfRetratoMenu.hidden) return;
+  if (pfRetratoBtn.contains(evento.target) || pfRetratoMenu.contains(evento.target))
+    return;
+  pfRetratoMenu.hidden = true;
+});
+
+document.getElementById("pf-retrato-trocar").addEventListener("click", () => {
+  pfRetratoMenu.hidden = true;
+  pfRetratoInput.click();
+});
+document.getElementById("pf-retrato-ver").addEventListener("click", () => {
+  pfRetratoMenu.hidden = true;
+  window.open(document.getElementById("pf-retrato").src, "_blank");
+});
+
+pfRetratoInput.addEventListener("change", () => {
+  const arquivo = pfRetratoInput.files[0];
+  pfRetratoInput.value = ""; // permite escolher o mesmo arquivo de novo depois
+  if (!arquivo) return;
+  const leitor = new FileReader();
+  leitor.onload = () => {
+    const imagem = new Image();
+    imagem.onload = () => {
+      // recorta um quadrado central e reduz pra 400px — cabe folgado no
+      // círculo (~220px no maior layout) e não incha o localStorage
+      const tamanho = 400;
+      const lado = Math.min(imagem.width, imagem.height);
+      const canvas = document.createElement("canvas");
+      canvas.width = tamanho;
+      canvas.height = tamanho;
+      canvas
+        .getContext("2d")
+        .drawImage(
+          imagem,
+          (imagem.width - lado) / 2,
+          (imagem.height - lado) / 2,
+          lado,
+          lado,
+          0,
+          0,
+          tamanho,
+          tamanho,
+        );
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+      localStorage.setItem("xadrezBruxos.retratoCustom", dataUrl);
+      document.getElementById("pf-retrato").src = dataUrl;
+    };
+    imagem.src = leitor.result;
+  };
+  leitor.readAsDataURL(arquivo);
 });
 
 /* ============================================================

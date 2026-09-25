@@ -28,8 +28,10 @@ Depois abra `http://localhost:8723/index.html`.
 - Iluminação de castelo à noite: luar frio direcional + tochas quentes tremeluzentes + ambiente de reflexo (IBL), com tone mapping cinematográfico.
 
 **Hub e códice**
-- **Hub inicial**: overlay de configuração (modo de jogo, dificuldade, cor das peças, guia do tabuleiro, tempo de partida, visual do tabuleiro) cobre o tabuleiro antes de qualquer partida. Só quando o jogador aperta **► Iniciar Partida** é que o relógio começa a contar; escolher "Aleatório" na cor dispara o floreio de moeda do cara-ou-coroa. Uma fita de navegação leva pro **Códice** (Historia) e, em breve, pro perfil do jogador.
+- **Hub inicial**: overlay de configuração (modo de jogo, dificuldade, cor das peças, guia do tabuleiro, tempo de partida, visual do tabuleiro) cobre o tabuleiro antes de qualquer partida. Só quando o jogador aperta **► Iniciar Partida** é que o relógio começa a contar; escolher "Aleatório" na cor dispara o floreio de moeda do cara-ou-coroa. Uma fita de navegação leva pro **Códice** (Historia) e pro **Meu perfil**.
 - **Códice**: vitrine 3D de cada peça — câmera livre (arraste pra girar, olha de qualquer ângulo, sem restrição), com uma lore curta ao lado e um toggle Bruxo/Golem pra ver as duas cores. "Avança" percorre as 6 peças.
+- **Meu perfil**: retrato editável (trocar foto local ou visualizar em tamanho real) e estatísticas vitalícias — rituais vencidos, páginas destruídas, selos quebrados (vitórias por xeque-mate), conjuração favorita (peça mais movida), tempo total jogado, Elo Rúnico e histórico recente.
+- **Conta local** ("pacto"): Criar Conta / Esqueci a Senha guardam nome+senha em `localStorage` (sem servidor, sem hash — só separa progresso entre conjuradores no mesmo aparelho, não é segurança real).
 - **Guia do tabuleiro opcional**: por padrão, selecionar uma peça pinta as casas-destino (verde livre, vermelho captura); pode ser desligado no hub pra quem quer jogar sem dica visual — a validação de clique continua igual, só a pintura é que some.
 
 **Jogo**
@@ -92,5 +94,5 @@ DEVLOG.md                histórico completo de desenvolvimento, sessão por ses
 - Reconhecimento de voz depende do navegador suportar `SpeechRecognition`/`webkitSpeechRecognition` (Chrome/Edge sim, Firefox não).
 - Regra FIDE de "tempo esgotado com material insuficiente pro adversário dar mate = empate" não é verificada — nesse caso raro, o jogo declara vitória por tempo do mesmo jeito.
 - Controle de tempo Clássico é a versão simplificada (90+30 direto), não a regra FIDE completa de duas fases.
-- "Meu perfil" (fita de navegação do hub/códice) ainda não tem tela própria — botão existe, desabilitado, é o próximo passo.
+- Conta local não é segurança real: senha em texto puro em `localStorage`, sem servidor. Serve só pra separar progresso entre conjuradores no mesmo aparelho.
 - Pacto de entrada não tem conta real: nome/senha só validam preenchimento, sem autenticação nem servidor.
